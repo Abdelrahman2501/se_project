@@ -24,7 +24,7 @@ publicApiRoutes(app);// uncomment
 
 // If the request is not for a public view/api, then it must pass
 // through our authentication middleware first
- app.use(authMiddleware); // uncomment
+ app.use(authMiddleware); // uncomment
 
 // The routes/views below can only be accessed if the user is authenticated
 
@@ -34,7 +34,7 @@ privateApiRoutes(app);
 
 // If request doesn't match any of the above routes then render the 404 page
 app.use(function(req, res, next) {
-  return res.status(404).render('404');
+  return res.status(404).render('404');
 });
 
 // Create HTTP Server and Listen for Requests
