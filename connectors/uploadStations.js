@@ -95,7 +95,7 @@ async function uploadR() {
       { routename: "hi76", fromstationid: 7, tostationid: 6 },
       { routename: "hi67", fromstationid: 6, tostationid: 7 },
     ];
-  
+ 
   for (let i = 0; i < routes.length; i++) {
     const element =routes[i];
     await db("se_project.routes").insert(element).returning("*");
