@@ -53,5 +53,21 @@ module.exports = function (app) {
     }
   });
 
-  
+  app.put("/api/v1/password/reset", async function(req, res){
+    try
+    {
+    const user = await getUser(req);
+    const {newpassword} = req.body
+      await db("se_project.users")
+      .where("id", user.userid)
+      .update({ password: newpassword});
+      return res.status(200).json(newpassword);
+    }
+
+    catch(e){
+      console.log(e.message);
+      return res.status(400).send("Can't update password");
+    }
+  });
+
 };
