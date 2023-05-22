@@ -2,13 +2,20 @@ const { isEmpty } = require("lodash");
 const { v4 } = require("uuid");
 const db = require("../../connectors/db");
 const roles = require("../../constants/roles");
-const {getSessionToken}=require('../../utils/session')
+const { getSessionToken } = require('../../utils/session');
+
+const findUserByEmail = async (email) => {
+  // Placeholder implementation to find user by email
+  const user = await db.select('*').from('se_project.users').where('email', email).first();
+  return user;
+};
+
 const getUser = async function (req) {
   const sessionToken = getSessionToken(req);
   if (!sessionToken) {
     return res.status(301).redirect("/");
   }
-  console.log("hi",sessionToken);
+  console.log("hi", sessionToken);
   const user = await db
     .select("*")
     .from("se_project.sessions")
@@ -23,7 +30,7 @@ const getUser = async function (req) {
       "se_project.users.roleid",
       "se_project.roles.id"
     )
-   .first();
+    .first();
 
   console.log("user =>", user);
   user.isNormal = user.roleid === roles.user;
@@ -34,28 +41,17 @@ const getUser = async function (req) {
 };
 
 module.exports = function (app) {
-  // example
+  // Example: Fetch list of users
   app.get("/users", async function (req, res) {
     try {
-       const user = await getUser(req);
-      const users = await db.select('*').from("se_project.users")
-        
+      const user = await getUser(req);
+      const users = await db.select('*').from("se_project.users");
       return res.status(200).json(users);
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not get users");
     }
-   
   });
-  app.put('/api/v1/password/reset',async (req,res)=>{
-
-    const user = await getUser(req);
-    user.userId
-
-
-  })
- 
-
 
   
 };
