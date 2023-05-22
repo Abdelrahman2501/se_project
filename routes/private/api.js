@@ -61,7 +61,7 @@ module.exports = function (app) {
       await db("se_project.users")
       .where("id", user.userid)
       .update({ password: newpassword});
-      return res.status(200).json(newpassword);
+      return res.status(200).json("Your new password is: "+newpassword);
     }
 
     catch(e){
