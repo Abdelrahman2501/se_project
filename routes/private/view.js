@@ -2,7 +2,7 @@ const db = require('../../connectors/db');
 const roles = require('../../constants/roles');
 const { getSessionToken } = require('../../utils/session');
 
-const getUser = async function(req) {
+const getUser = async function (req) {
   const sessionToken = getSessionToken(req);
   if (!sessionToken) {
     return res.status(301).redirect('/');
@@ -14,33 +14,57 @@ const getUser = async function(req) {
     .innerJoin('se_project.users', 'se_project.sessions.userid', 'se_project.users.id')
     .innerJoin('se_project.roles', 'se_project.users.roleid', 'se_project.roles.id')
     .first();
-  
+
   console.log('user =>', user)
   user.isStudent = user.roleid === roles.student;
   user.isAdmin = user.roleid === roles.admin;
   user.isSenior = user.roleid === roles.senior;
 
-  return user;  
+  return user;
 }
 
-module.exports = function(app) {
+module.exports = function (app) {
   // Register HTTP endpoint to render /users page
-  app.get('/dashboard', async function(req, res) {
+  app.get('/dashboard', async function (req, res) {
     const user = await getUser(req);
     return res.render('dashboard', user);
   });
 
   // Register HTTP endpoint to render /users page
-  app.get('/users', async function(req, res) {
+  app.get('/users', async function (req, res) {
     const users = await db.select('*').from('se_project.users');
     return res.render('users', { users });
   });
 
   // Register HTTP endpoint to render /courses page
-  app.get('/stations', async function(req, res) {
+  app.get('/stations', async function (req, res) {
     const user = await getUser(req);
     const stations = await db.select('*').from('se_project.stations');
     return res.render('stations_example', { ...user, stations });
   });
+
+  app.get('/resetPassword', async function (req, res) {
+    const users = await db.select('*').from('se_project.users');
+    return res.render('reset-password'); // Assuming 'reset-password' is the name of your .hjs template file
+  });
+
+  app.get('/tickets', async function (req, res) {
+    const users = await db.select('*').from('se_project.tickets');
+    return res.render('buyTickets'); // Assuming 'reset-password' is the name of your .hjs template file
+  });
+
+  app.get('/requests/refund', async function (req, res) {
+    try {
+      const user = await getUser(req);
+      const userId = user.userid;
+      const tickets = await db.select('id').from('se_project.tickets').where('userid', userId);
+
+      return res.render('requestRefund', { tickets });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
 
 };

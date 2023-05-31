@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Refund Ticket</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <style>
+      .success-message {
+        color: green;
+        font-weight: bold;
+      }
+
+      .error-message {
+        color: red;
+        font-weight: bold;
+      }
+
+      /* Adjust navbar position */
+      .navbar {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container mt-4">
+      <div>
+        <nav class="navbar navbar-inverse">
+          <div class="container-fluid">
+            <div class="navbar-header">
+              <a class="navbar-brand" href="/dashboard">Dashboard</a>
+            </div>
+            <ul class="nav navbar-nav">
+              <li class="active">
+                <a href="/dashboard">
+                  <i class="fas fa-home"></i>
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="/stations_example">
+                  <i class="fas fa-subway"></i>
+                  Station
+                </a>
+              </li>
+              <li>
+                <a href="/users">
+                  <i class="fas fa-users"></i>
+                  Users
+                </a>
+              </li>
+              <li>
+                <a href="/users/add">
+                  <i class="fas fa-user-plus"></i>
+                  Add Users
+                </a>
+              </li>
+              <li class="dropdown">
+                <a
+                  href="#"
+                  class="dropdown-toggle"
+                  data-toggle="dropdown"
+                  role="button"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="fas fa-shopping-cart"></i>
+                  Shop
+                  <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="/tickets">
+                      <i class="fas fa-ticket-alt"></i>
+                      Tickets
+                    </a>
+                  </li>
+                  <!-- Add other shop-related options here -->
+                </ul>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li class="dropdown">
+                <a
+                  href="#"
+                  class="dropdown-toggle"
+                  data-toggle="dropdown"
+                  role="button"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="fas fa-user-cog"></i>
+                  User Options
+                  <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="/resetPassword">
+                      <i class="fas fa-lock"></i>
+                      Reset Password
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/requests/refund">
+                      <i class="fas fa-undo"></i>
+                      Refund Ticket
+                    </a>
+                  </li>
+                  <!-- Add other user-related options here -->
+                </ul>
+              </li>
+              <li>
+                <a href="/"><i class="fas fa-sign-out-alt"></i> Logout</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <div class="container">
+          <h1>Refund Ticket</h1>
+          <table id="ticketsTable" class="table">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Origin</th>
+                <th>Destination</th>
+                <th>Trip Date</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="form-group">
+            <label for="ticketId">Enter Ticket ID:</label>
+            <input
+              type="text"
+              class="form-control"
+              id="ticketId"
+              name="ticketId"
+            />
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="requestRefund()"
+          >
+            Refund
+          </button>
+          <div id="successMessage" class="success-message"></div>
+          <div id="errorMessage" class="error-message"></div>
+        </div>
+
+        <script>
+          function requestRefund() {
+            const ticketIdInput = document.getElementById("ticketId");
+            const ticketId = ticketIdInput.value;
+
+            // Make AJAX request to handle refund
+            axios
+              .post(`/api/v1/refund/${ticketId}`)
+              .then((response) => {
+                const successMessage =
+                  document.getElementById("successMessage");
+                successMessage.textContent = response.data.message;
+                successMessage.style.display = "block";
+
+                // Clear input field
+                ticketIdInput.value = "";
+
+                // Remove the refunded ticket from the table
+                const ticketRow = document.getElementById(
+                  `ticketRow_${ticketId}`
+                );
+                if (ticketRow) {
+                  ticketRow.remove();
+                }
+              })
+              .catch((error) => {
+                const errorMessage = document.getElementById("errorMessage");
+                errorMessage.textContent = error.response.data;
+                errorMessage.style.display = "block";
+              });
+          }
+
+          // Fetch ticket data from the server
+          axios
+            .get("/api/v1/user_tickets")
+            .then((response) => {
+              const tickets = response.data;
+              const ticketsTableBody = document.querySelector(
+                "#ticketsTable tbody"
+              );
+
+              tickets.forEach((ticket) => {
+                const row = document.createElement("tr");
+                row.id = `ticketRow_${ticket.id}`;
+                const ticketIdCell = document.createElement("td");
+                const originCell = document.createElement("td");
+                const destinationCell = document.createElement("td");
+                const tripDateCell = document.createElement("td");
+
+                ticketIdCell.textContent = ticket.id;
+                originCell.textContent = ticket.origin;
+                destinationCell.textContent = ticket.destination;
+                tripDateCell.textContent = ticket.tripdate;
+
+                row.appendChild(ticketIdCell);
+                row.appendChild(originCell);
+                row.appendChild(destinationCell);
+                row.appendChild(tripDateCell);
+                ticketsTableBody.appendChild(row);
+              });
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        </script>
+
+        <script
+          src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+          integrity="sha512-bGUbtpS1xu3/MndnLSyW2s/Qc2PvUJi3Dln6KlPBDgjqnmDU+ScLizY6vePJJh7D42fLJc0VFsGTLvOVDxrj1w=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"
+        ></script>
+        <script
+          src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"
+          integrity="sha512-a1yzz3D5wJ47xWYYG6yVD+X1uxbK/Aj3+E3jKxmA3vex/kSZRtjmZp+vrlYY3YDILNyzekGVeK5kpLj+TAP3Tg=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"
+        ></script>
+      </div>
+    </div>
+  </body>
+</html>
