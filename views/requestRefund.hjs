@@ -31,6 +31,7 @@
 
   <body>
     <div class="container mt-4">
+       <div class="container" style="margin-top: 20px;">
       <div>
         <nav class="navbar navbar-inverse">
           <div class="container-fluid">
@@ -122,7 +123,6 @@
             </ul>
           </div>
         </nav>
-
         <div class="container">
           <h1>Refund Ticket</h1>
           <table id="ticketsTable" class="table">
