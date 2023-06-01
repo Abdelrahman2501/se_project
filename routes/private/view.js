@@ -45,19 +45,19 @@ module.exports = function (app) {
 
   app.get('/resetPassword', async function (req, res) {
     const users = await db.select('*').from('se_project.users');
-    return res.render('reset-password'); // Assuming 'reset-password' is the name of your .hjs template file
+    return res.render('reset-password');
   });
 
   app.get('/tickets', async function (req, res) {
     const users = await db.select('*').from('se_project.tickets');
-    return res.render('buyTickets'); // Assuming 'reset-password' is the name of your .hjs template file
+    return res.render('buyTickets');
   });
 
   app.get('/requests/refund', async function (req, res) {
     try {
       const user = await getUser(req);
       const userId = user.userid;
-      const tickets = await db.select('id').from('se_project.tickets').where('userid', userId);
+      const tickets = await db.select('id').from('se_project.refund_requests').where('userid', userId);
 
       return res.render('requestRefund', { tickets });
     } catch (error) {
@@ -66,5 +66,14 @@ module.exports = function (app) {
     }
   });
 
+  app.get('/requests/senior', async function (req, res) {
+    const users = await db.select('*').from('se_project.senior_requests');
+    return res.render('requestSenior');
+  });
+
+  app.get('/manage/requests/seniors', async function (req, res) {
+    const users = await db.select('*').from('se_project.senior_requests');
+    return res.render('manageSenior');
+  });
 
 };
