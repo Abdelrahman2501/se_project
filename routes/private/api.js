@@ -306,38 +306,38 @@ module.exports = function (app) {
     }
   });
 
-  // app.put("/api/v1/requests/senior/:requestId", async function (req, res) {
-  //   try {
-  //     const user = await getUser(req);
-  //     const { requestId } = req.params;
-  //     const { seniorStatus } = req.body;
+  app.put("/api/v1/requests/senior/:requestId", async function (req, res) {
+    try {
+      const user = await getUser(req);
+      const { requestId } = req.params;
+      const { seniorStatus } = req.body;
 
-  //     if (!user.isAdmin) {
-  //       return res.status(403).send("Unauthorized");
-  //     }
+      if (!user.isAdmin) {
+        return res.status(403).send("Unauthorized");
+      }
 
-  //     await db("se_project.senior_requests")
-  //       .where("id", requestId)
-  //       .update({ status: seniorStatus });
+      await db("se_project.senior_requests")
+        .where("id", requestId)
+        .update({ status: seniorStatus });
 
-  //     if (seniorStatus == "accepted") {
-  //       const reqUserId = await db("se_project.senior_requests")
-  //         .select("userid")
-  //         .where("id", requestId)
-  //         .first();
-  //       const requserId2 = reqUserId.userid;
-  //       await db("se_project.users")
-  //         .where("id", requserId2)
-  //         .update({ roleid: 3 });
-  //     }
-  //     return res
-  //       .status(200)
-  //       .json({ message: "Senior request status updated successfully." });
-  //   } catch (e) {
-  //     console.log(e.message);
-  //     return res.status(400).send("Error updating senior request status.");
-  //   }
-  // });
+      if (seniorStatus == "accepted") {
+        const reqUserId = await db("se_project.senior_requests")
+          .select("userid")
+          .where("id", requestId)
+          .first();
+        const requserId2 = reqUserId.userid;
+        await db("se_project.users")
+          .where("id", requserId2)
+          .update({ roleid: 3 });
+      }
+      return res
+        .status(200)
+        .json({ message: "Senior request status updated successfully." });
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Error updating senior request status.");
+    }
+  });
 
   app.post("/api/v1/payment/ticket", async function (req, res) {
     try {
@@ -589,34 +589,6 @@ module.exports = function (app) {
     } catch (error) {
       console.log(error.message);
       res.status(500).json({ error: 'Error retrieving user information' });
-    }
-  });
-
-  app.put("/api/v1/requests/senior/:requestId", async function (req, res) {
-    try {
-      const user = await getUser(req);
-      if (!user.isAdmin) {
-        return res.status(400).json("You cannot accept/reject senior requests");
-      }
-      const { requestId } = req.params;
-      const { seniorStatus } = req.body;
-      //const STATUS= await db("se_project.senior_requests").where("id", requestId).update({status: seniorstatus});
-      if (seniorStatus === "accepted") {
-        const { userid } = await db("se_project.senior_requests").where("id", requestId).first();
-        const senior_status = await db("se_project.users").where("id", userid).update("roleid", 3);
-        // const totalPrice = totalPrice/2; //purchase         
-        const STATUS = await db("se_project.senior_requests").where("id", requestId).update({ status: seniorStatus });
-        return res.status(200).json({ message: 'request is accepted' });
-      }
-      else
-        if (seniorStatus === "rejected") {
-          const senior_status = await db("se_project.senior_requests").where("id", requestId).update({ status: seniorStatus });
-          return res.status(400).send("Access denied");
-        }
-    }
-    catch (e) {
-      console.log(e.message);
-      return res.status(400).send("Request processing failed");
     }
   });
 
