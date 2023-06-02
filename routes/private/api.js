@@ -594,6 +594,7 @@ module.exports = function (app) {
     }
   });
 
+  //get table for front end
   app.get('/api/v1/getSeniorReq', async function (req, res) {
     try {
       const user = await getUser(req);
@@ -626,6 +627,81 @@ module.exports = function (app) {
     } catch (e) {
       console.error('Error retrieving refund requests:', e);
       res.status(500).json({ error: 'An error occurred while retrieving refund requests.' });
+    }
+  });
+
+  app.put("/api/v1/route/:routeId", async function (req, res) {
+    try {
+      const user = await getUser(req);
+
+      if (!user.isAdmin) {
+        return res.status(403).send("Access denied. User is not an admin.");
+      }
+
+      const { routeId } = req.params;
+      const { routeName } = req.body;
+
+      // Perform validation and error handling if necessary
+
+      // Update route logic
+      await db("se_project.routes")
+        .where("id", routeId)
+        .update({ routename: routeName });
+
+      return res.status(200).json({ message: "Route updated successfully." });
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Error updating route.");
+    }
+  });
+
+  app.put("/api/v1/station/:stationId", async function (req, res) {
+    try {
+      const user = await getUser(req);
+
+      if (!user.isAdmin) {
+        return res.status(403).send("Access denied. User is not an admin.");
+      }
+
+      const { stationId } = req.params;
+      const { stationName } = req.body;
+
+      // Update station logic
+      await db("se_project.stations")
+        .where("id", stationId)
+        .update({ stationname: stationName });
+
+      return res.status(200).json({ message: "Station updated successfully." });
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Error updating station.");
+    }
+  });
+
+  //get table for front end
+  app.get('/api/v1/stations', async function (req, res) {
+    try {
+      const stations = await db('se_project.stations').select('*');
+      res.json(stations);
+    } catch (e) {
+      console.error('Error retrieving refund requests:', e);
+      res.status(500).json({ error: 'An error occurred while retrieving refund requests.' });
+    }
+  });
+
+  //get rides of user
+  app.get('/api/v1/ridesUser', async function (req, res) {
+    try {
+      const userId = req.query.userId; // Assuming the user ID is provided as a query parameter
+
+      const userRides = await db('se_project.rides')
+        .select('id', 'status', 'origin', 'destination', 'userid', 'ticketid', 'tripdate')
+        .where('userid', userId);
+
+      res.status(200).json(userRides);
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).json({ error: 'Error retrieving rides information' });
     }
   });
 };

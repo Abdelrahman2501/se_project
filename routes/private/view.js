@@ -40,7 +40,7 @@ module.exports = function (app) {
   app.get('/stations', async function (req, res) {
     const user = await getUser(req);
     const stations = await db.select('*').from('se_project.stations');
-    return res.render('stations_example', { ...user, stations });
+    return res.render('stations', { ...user, stations });
   });
 
   app.get('/resetPassword', async function (req, res) {
@@ -79,6 +79,11 @@ module.exports = function (app) {
   app.get('/manage/requests/refund', async function (req, res) {
     const users = await db.select('*').from('se_project.senior_requests');
     return res.render('manageRefund');
+  });
+
+  app.get('/rides', async function (req, res) {
+    const users = await db.select('*').from('se_project.senior_requests');
+    return res.render('rides');
   });
 
 };

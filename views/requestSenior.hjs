@@ -58,9 +58,7 @@
               <a href="/dashboard"><i class="fas fa-home"></i> Home</a>
             </li>
             <li>
-              <a href="/stations_example"
-                ><i class="fas fa-subway"></i> Station</a
-              >
+              <a href="/stations"><i class="fas fa-subway"></i> Station</a>
             </li>
             <li class="dropdown">
               <a
