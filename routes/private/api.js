@@ -1,4 +1,4 @@
-const { isEmpty } = require("lodash");
+const { isEmpty, subtract } = require("lodash");
 const { v4 } = require("uuid");
 const db = require("../../connectors/db");
 const roles = require("../../constants/roles");
@@ -481,13 +481,9 @@ module.exports = function (app) {
         .where("id", requestId)
         .first();
 
-      // if (currStatus.status === "accepted") {
-      //   return res.status(403).send("Already accepted!");
+      // if (currStatus.status === "rejected") {
+      //   return res.status(403).send("Already rejected!");
       // }
-
-      if (currStatus.status === "rejected") {
-        return res.status(403).send("Already rejected!");
-      }
 
       // Get subid to check if it is null or not
       const ifsub = await db("se_project.tickets")
@@ -496,7 +492,7 @@ module.exports = function (app) {
         .first();
 
       if (refundStatus === "accepted") {
-        if (ifsub === undefined) {
+        if (ifsub === null || ifsub.subid === null) {
           const amount = await db("se_project.transactions")
             .select("amount")
             .where("purchasedid", reqrefundticket)
@@ -512,25 +508,32 @@ module.exports = function (app) {
             .where("id", requestId)
             .update({ status: "accepted", refundamount: parsedAmount });
 
-          w
+          await db("se_project.rides").where("ticketid", reqrefundticket).del();
+          await db("se_project.transactions").where("purchasedid", reqrefundticket).del();
 
-          return res
-            .status(200)
-            .json({ message: "Refund request accepted successfully, amount refunded = " + parsedAmount + " LE" });
-        }
-        else if (ifsub !== undefined) {
-          await db("se_project.refund_requests")
-            .where("id", requestId)
-            .update({ status: "accepted", refundamount: 1 });
+          return res.status(200).json({
+            message: "Refund request accepted successfully, amount refunded = " + parsedAmount + " LE"
+          });
 
+        } else {
           const parsedSub = parseInt(ifsub.subid);
+
+          if (isNaN(parsedSub)) {
+            return res.status(400).send("Invalid subscription ID for refund.");
+          }
+
           const noTickets = await db("se_project.subscription")
             .select("nooftickets")
             .where("id", parsedSub)
             .first();
 
+          if (!noTickets) {
+            return res.status(400).send("Subscription not found.");
+          }
+
           const currentNoOfTickets = noTickets.nooftickets;
           const updatedNoOfTickets = currentNoOfTickets + 1;
+
           await db("se_project.subscription")
             .where("id", parsedSub)
             .update({ nooftickets: updatedNoOfTickets });
@@ -545,10 +548,9 @@ module.exports = function (app) {
       } else if (refundStatus === "rejected") {
         await db("se_project.refund_requests")
           .where("id", requestId)
-          .update({ refundamount: 0 });
-        return res
-          .status(200)
-          .send("Refund request is rejected successfully, amount refunded = " + 0 + " LE");
+          .update({ status: "rejected", refundamount: 0 });
+
+        return res.status(200).send("Refund request is rejected successfully, amount refunded = " + 0 + " LE");
       } else {
         return res.status(400).send("Invalid refund status.");
       }
@@ -601,6 +603,29 @@ module.exports = function (app) {
     } catch (error) {
       console.log(error.message);
       res.status(500).json({ error: 'Error retrieving user information' });
+    }
+  });
+
+  //get table for front end
+  app.get('/api/v1/seniorRequests', async function (req, res) {
+    try {
+      const seniorRequests = await db('se_project.senior_requests').select('*');
+      res.json(seniorRequests);
+    } catch (err) {
+      console.error('Error retrieving senior requests:', err);
+      res.status(500).json({ error: 'An error occurred while retrieving senior requests.' });
+    }
+  });
+
+
+  //get table for front end
+  app.get('/api/v1/refundRequests', async function (req, res) {
+    try {
+      const refundRequests = await db('se_project.refund_requests').select('*');
+      res.json(refundRequests);
+    } catch (e) {
+      console.error('Error retrieving refund requests:', e);
+      res.status(500).json({ error: 'An error occurred while retrieving refund requests.' });
     }
   });
 };

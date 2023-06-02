@@ -145,12 +145,6 @@
                   Station
                 </a>
               </li>
-              <li>
-                <a href="/users">
-                  <i class="fas fa-users"></i>
-                  Users
-                </a>
-              </li>
               <li class="dropdown">
                 <a
                   href="#"
@@ -245,13 +239,13 @@
                     </a>
                   </li>
                   <li>
-                    <a href="/admin/requests/refunds">
+                    <a href="/manage/requests/refund">
                       <i class="fas fa-undo"></i>
                       Manage Requests (Refunds)
                     </a>
                   </li>
                   <li>
-                    <a href="/admin/requests/seniors">
+                    <a href="/manage/requests/seniors">
                       <i class="fas fa-user-plus"></i>
                       Manage Requests (Seniors)
                       <i class="fas fa-star"></i>
@@ -266,7 +260,7 @@
                 </ul>
               </li>
               <li>
-                <a href="/logout">
+                <a href="/">
                   <i class="fas fa-sign-out-alt"></i>
                   Logout
                 </a>

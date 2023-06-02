@@ -76,4 +76,9 @@ module.exports = function (app) {
     return res.render('manageSenior');
   });
 
+  app.get('/manage/requests/refund', async function (req, res) {
+    const users = await db.select('*').from('se_project.senior_requests');
+    return res.render('manageRefund');
+  });
+
 };
