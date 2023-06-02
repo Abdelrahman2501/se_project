@@ -690,18 +690,20 @@ module.exports = function (app) {
   });
 
   //get rides of user
-  app.get('/api/v1/ridesUser', async function (req, res) {
+  app.get("/api/v1/ridesUser", async function (req, res) {
     try {
-      const userId = req.query.userId; // Assuming the user ID is provided as a query parameter
+      const user = await getUser(req);
+      const userId = user.userid;
 
-      const userRides = await db('se_project.rides')
-        .select('id', 'status', 'origin', 'destination', 'userid', 'ticketid', 'tripdate')
+      const rides = await db
+        .select('*')
+        .from('se_project.rides')
         .where('userid', userId);
 
-      res.status(200).json(userRides);
-    } catch (error) {
-      console.log(error.message);
-      res.status(500).json({ error: 'Error retrieving rides information' });
+      res.status(200).json(rides);
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).json({ error: "Error retrieving user rides" });
     }
   });
 };

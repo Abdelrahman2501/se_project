@@ -29,6 +29,7 @@
           type: "GET",
           success: function (rides) {
             var ridesTable = $("#rides-table");
+            var tbody = ridesTable.find("tbody");
 
             rides.forEach(function (ride) {
               var row = $("<tr>");
@@ -41,7 +42,7 @@
               row.append($("<td>").text(ride.ticketid));
               row.append($("<td>").text(ride.tripdate));
 
-              ridesTable.append(row);
+              tbody.append(row);
             });
           },
           error: function () {
