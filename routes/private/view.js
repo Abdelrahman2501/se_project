@@ -85,5 +85,40 @@ module.exports = function (app) {
     const users = await db.select('*').from('se_project.senior_requests');
     return res.render('rides');
   });
+  app.get('/admin/stations', async function (req, res) {
+    const users = await db.select('*').from('se_project.stations');
+    return res.render('manageStations');
+  });
+  app.get('/addStation', async function (req, res) {
+    const users = await db.select('*').from('se_project.stations');
+    return res.render('addStation');
+  });
+  app.get('/updateStations', async function (req, res) {
+    const users = await db.select('*').from('se_project.stations');
+    return res.render('updateStation');
+  });
+  app.get('/admin/routes', async function (req, res) {
+    const users = await db.select('*').from('se_project.routes');
+    return res.render('manageRoutes');
+  });
+  app.get('/addRoute', async function (req, res) {
+    const users = await db.select('*').from('se_project.routes');
+    return res.render('addRoute.hjs');
+  });
+  app.get('/updateRoutes', async function (req, res) {
+    const users = await db.select('*').from('se_project.routes');
+    return res.render('updateRoute');
+  });
+  app.get('/deleteRoutes', async function (req, res) {
+    const users = await db.select('*').from('se_project.routes');
+    return res.render('deleteRoute');
+  });
+  app.get('/admin/zones', async function (req, res) {
+    const users = await db.select('*').from('se_project.zones');
+    return res.render('updateZonePrice');
+  });
+
+
+
 
 };

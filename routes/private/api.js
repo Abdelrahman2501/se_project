@@ -217,92 +217,77 @@ module.exports = function (app) {
 
   app.post("/api/v1/route", async function (req, res) {
     try {
-      const { newStationId, connectedStationId, routeName } = req.body;
       const user = await getUser(req);
-      // Validate user is admin
+  
       if (!user.isAdmin) {
         return res.status(403).send("Unauthorized");
       }
-
-      // Validate station IDs
-      const newStation = await db("se_project.stations")
-        .select("*")
-        .where({ id: newStationId })
-        .first();
-
-      if (!newStation) {
-        return res.status(404).send("New station not found");
-      }
-
-      const newStationStatus = newStation.stationstatus;
-
-      // Check the status of newStationId
-      if (newStationStatus === "old") {
-        return res
-          .status(400)
-          .send("This an old station. Cannot add a new route for it");
-      }
-
-      // Validate connectedStationId
+  
+      const { newStationId, connectedStationId, routeName } = req.body;
+      let fromStationId, toStationId;
       const connectedStation = await db("se_project.stations")
         .select("*")
         .where({ id: connectedStationId })
         .first();
-
-      if (!connectedStation) {
-        return res.status(404).send("Connected station not found");
-      }
-
-      // Get connected station position
       const connectedStationPosition = connectedStation.stationposition;
-
-      // Create the route
-      let route;
-      if (connectedStationPosition === "start") {
-        route = {
-          routename: routeName,
-          fromstationid: connectedStationId,
-          tostationid: newStationId,
-        };
-        await db("se_project.stations")
-          .where("id", newStationId)
-          .update({ stationposition: "end" });
-      } else if (connectedStationPosition === "end") {
-        route = {
-          routename: routeName,
-          fromstationid: newStationId,
-          tostationid: connectedStationId,
-        };
-        await db("se_project.stations")
-          .where("id", newStationId)
-          .update({ stationposition: "start" });
-      } else {
-        return res.status(400).send("Cannot add station in middle of route");
+  
+      if (
+        connectedStationPosition !== "start" &&
+        connectedStationPosition !== "end"
+      ) {
+        console.log(
+          'Invalid position. Only "start" or "end" positions are allowed.'
+        );
+        return res
+          .status(400)
+          .send(
+            'Invalid position. Only "start" or "end" positions are allowed.'
+          );
       }
-
-      // Check if route with the same name already exists
-      const existingRoute = await db("se_project.routes")
+  
+      const routeExists = await db
         .select("*")
-        .where({ routename: routeName })
-        .first();
-
-      if (existingRoute) {
-        return res.status(400).send("Route name already exists");
+        .from("se_project.routes")
+        .where("routename", req.body.routeName);
+  
+      if (routeExists.length > 0) {
+        return res.status(400).send("This route already exists");
       }
-
-      // Save the route
-      const savedRoute = await db("se_project.routes")
-        .insert(route)
+  
+      if (connectedStationPosition === "start") {
+        fromStationId = connectedStationId;
+        toStationId = connectedStationId + 1;
+      } else if (connectedStationPosition === "end") {
+        fromStationId = connectedStationId - 1;
+        toStationId = connectedStationId;
+      } else {
+        return res.status(401).send("Only admin users can create routes");
+      }
+  
+      const newRoute = {
+        routename: routeName,
+        fromstationid: fromStationId,
+        tostationid: toStationId,
+      };
+  
+      const insertedRoute = await db("se_project.routes")
+        .insert(newRoute)
         .returning("*");
-
-      if (savedRoute.length === 0) {
-        throw new Error("Failed to save the route");
-      }
-
-      return res.send({ route: savedRoute[0] });
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send("Error adding route");
+  
+      // Update station positions
+      await db("se_project.stations")
+        .update({ stationposition: "start" })
+        .where("id", fromStationId);
+  
+      await db("se_project.stations")
+        .update({ stationposition: "end" })
+        .where("id", toStationId);
+  
+      console.log("Route has been created successfully");
+      return res.status(200).json(insertedRoute);
+    } catch (error) {
+      console.log(error.message);
+      return res.status(500).send("Could not create new route");
     }
   });
 
@@ -336,6 +321,30 @@ module.exports = function (app) {
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Error updating senior request status.");
+    }
+  });
+  app.put("/api/v1/route/:routeId", async function (req, res) {
+    try {
+      const user = await getUser(req);
+
+      if (!user.isAdmin) {
+        return res.status(403).send("Access denied. User is not an admin.");
+      }
+
+      const { routeId } = req.params;
+      const { routeName } = req.body;
+
+      // Perform validation and error handling if necessary
+
+      // Update route logic
+      await db("se_project.routes")
+        .where("id", routeId)
+        .update({ routename: routeName });
+
+      return res.status(200).json({ message: "Route updated successfully." });
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Error updating route.");
     }
   });
 
@@ -633,7 +642,7 @@ module.exports = function (app) {
   app.put("/api/v1/route/:routeId", async function (req, res) {
     try {
       const user = await getUser(req);
-
+      
       if (!user.isAdmin) {
         return res.status(403).send("Access denied. User is not an admin.");
       }
@@ -658,25 +667,31 @@ module.exports = function (app) {
   app.put("/api/v1/station/:stationId", async function (req, res) {
     try {
       const user = await getUser(req);
-
+  
       if (!user.isAdmin) {
         return res.status(403).send("Access denied. User is not an admin.");
       }
-
+  
       const { stationId } = req.params;
       const { stationName } = req.body;
-
+  
+      if (!stationName) {
+        return res.status(400).send("Station name is required.");
+      }
+  
       // Update station logic
       await db("se_project.stations")
         .where("id", stationId)
         .update({ stationname: stationName });
-
+  
       return res.status(200).json({ message: "Station updated successfully." });
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Error updating station.");
     }
   });
+  
+
 
   //get table for front end
   app.get('/api/v1/stations', async function (req, res) {
@@ -687,6 +702,56 @@ module.exports = function (app) {
       console.error('Error retrieving refund requests:', e);
       res.status(500).json({ error: 'An error occurred while retrieving refund requests.' });
     }
+  });
+  app.delete('/api/v1/route/:routeId', async (req, res) => {
+    try {
+      const user = await getUser(req);
+      if (user.isAdmin) {
+        const routeId = req.params.routeId;
+        //const stationId= req.params.stationId;
+        const routeDelete = await db('se_project.routes').where('id', routeId);
+        console.log(routeDelete)
+        if (routeDelete.length== 0) {
+          return res.status(404).json({ error: 'Route not found' });
+          
+        }
+        
+        const { fromstationid, tostationid } = routeDelete[0];
+        
+        
+  
+        //update position el 1 wla el 2
+        //check el route elly 3kso el to bt3to l 1 w from htb2a 2 mowgod wla la w en el 2 tb2a start
+        //msh mowgod position null from htkon null
+        //mowgod msh h3ml haga
+       console.log(tostationid);
+       console.log(fromstationid);
+      // Updating the position of the stations
+      const nextStation = await db('se_project.routes').where('tostationid', fromstationid).first();
+      if (nextStation) {
+        await db('se_project.stations').where('id', nextStation.fromstationid).update({ stationposition: 'start' });
+      
+      }
+      console.log(nextStation);
+      const prevStation = await db('se_project.routes').where('tostationid', tostationid).first();
+      if (prevStation) {
+        await db('se_project.stations').where('id', prevStation.fromstationid).update({ stationposition: 'start' });
+      }
+      console.log(prevStation);
+      console.log('Route and connected stations deleted successfully');
+      await db('se_project.routes').where('id', routeId).del();
+      return res.status(200).json({ message: 'Route and connected stations deleted successfully' });
+    
+    }
+    // else if(prevStation == stationposition){
+  //}
+      else {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ error: 'Cannot delete the route' });
+  }
   });
 
   //get rides of user
@@ -706,4 +771,28 @@ module.exports = function (app) {
       res.status(500).json({ error: "Error retrieving user rides" });
     }
   });
+  //UPDATE ZONE PRICES -ADMIN
+app.put("/api/v1/zones/:zoneId", async function (req, res) {
+  try {
+    const user = await getUser(req);
+
+    if (!user.isAdmin) {
+      return res.status(403).send("Access denied. User is not an admin.");
+    }
+
+    const { zoneId } = req.params;
+    const { price } = req.body;
+
+    // Perform validation and error handling if necessary
+
+    // Update zone logic
+    await db("se_project.zones").where("id", zoneId).update({ price });
+
+    return res.status(200).json({ message: "Zone price updated successfully." });
+  } catch (e) {
+    console.log(e.message);
+    return res.status(400).send("Error updating zone price.");
+  }
+});
 };
+
