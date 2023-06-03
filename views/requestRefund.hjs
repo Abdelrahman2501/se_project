@@ -54,12 +54,6 @@
                   Station
                 </a>
               </li>
-              <li>
-                <a href="/users/add">
-                  <i class="fas fa-user-plus"></i>
-                  Add Users
-                </a>
-              </li>
               <li class="dropdown">
                 <a
                   href="#"

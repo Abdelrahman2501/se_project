@@ -25,6 +25,13 @@
               // Add table title
               $("#tableTitle").text("Manage Refund Requests");
 
+              if (data.length === 0) {
+                // Display message when no refund requests are available
+                var noRequestsMessage = `<tr><td colspan="6">No refund requests found.</td></tr>`;
+                $("#refundTable tbody").append(noRequestsMessage);
+                return;
+              }
+
               // Populate the table with data
               data.forEach(function (request) {
                 var acceptButton = "";
@@ -36,7 +43,7 @@
                 } else if (request.status === "rejected") {
                   acceptButton = `<button class="btn btn-primary accept-btn" data-requestid="${request.id}" disabled>Rejected</button>`;
                   rejectButton = "";
-                } else if (request.refundamount) {
+                } else if (request.status === "pending") {
                   acceptButton = `<button class="btn btn-primary accept-btn" data-requestid="${request.id}">Accept</button>`;
                 } else {
                   acceptButton = `<button class="btn btn-primary accept-btn" data-requestid="${request.id}" disabled>Cannot Accept</button>`;
@@ -157,16 +164,10 @@
             </div>
             <ul class="nav navbar-nav">
               <li class="active">
-                <a href="/dashboard">
-                  <i class="fas fa-home"></i>
-                  Home
-                </a>
+                <a href="/dashboard"><i class="fas fa-home"></i> Home</a>
               </li>
               <li>
-                <a href="/stations">
-                  <i class="fas fa-subway"></i>
-                  Station
-                </a>
+                <a href="/stations"><i class="fas fa-subway"></i> Station</a>
               </li>
               <li class="dropdown">
                 <a
@@ -177,8 +178,7 @@
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
-                  <i class="fas fa-shopping-cart"></i>
-                  Shop
+                  <i class="fas fa-shopping-cart"></i> Shop
                   <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
@@ -207,32 +207,41 @@
               </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-              <!-- Add other user-related options here -->
               <li>
-                <a href="/logout">
-                  <i class="fas fa-sign-out-alt"></i>
-                  Logout
-                </a>
+                <a href="/"><i class="fas fa-sign-out-alt"></i> Logout</a>
               </li>
             </ul>
           </div>
         </nav>
       </div>
-      <div class="table-title" id="tableTitle"></div>
-      <div>
-        <table class="table" id="refundTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Status</th>
-              <th>User ID</th>
-              <th>Refund Amount</th>
-              <th>Ticket ID</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <i class="fa fa-list"></i> Refund Requests
+              </h3>
+            </div>
+            <div class="panel-body">
+              <div class="table-responsive">
+                <h2 id="tableTitle" class="table-title"></h2>
+                <table id="refundTable" class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Request ID</th>
+                      <th>Status</th>
+                      <th>User ID</th>
+                      <th>Refund Amount</th>
+                      <th>Ticket ID</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </body>

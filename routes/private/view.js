@@ -86,4 +86,10 @@ module.exports = function (app) {
     return res.render('rides', { ride });
   });
 
+  app.get('/subscriptions', async function (req, res) {
+    const subscriptions = await db.select('*').from('se_project.subscription');
+    return res.render('subscriptions', { subscriptions });
+  });
+
+
 };

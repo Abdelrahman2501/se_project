@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Subscriptions</title>
+    <link rel="stylesheet" href="/styles/bootstrap.min.css" />
+    <link rel="stylesheet" href="/styles/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/styles/custom-style.css" />
+    <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript"></script>
+    <script>
+      $(document).ready(function () {
+        // Fetch zone data and populate dropdown
+        $.ajax({
+          url: "/api/v1/zones",
+          method: "GET",
+          success: function (data) {
+            // Iterate over the zone IDs and create option elements
+            data.forEach(function (zone) {
+              var option = $("<option>")
+                .val(zone.id)
+                .text(zone.id + " (" + zone.zonetype + ")");
+              $("#zoneId").append(option);
+            });
+          },
+          error: function (xhr, status, error) {
+            console.log(error);
+            // Handle error if unable to fetch zone data
+          },
+        });
+
+        // Form submission handler
+        $("#subscriptionForm").submit(function (event) {
+          event.preventDefault();
+          var creditCardNumber = $("#creditCardNumber").val();
+          var holderName = $("#holderName").val();
+          var payedAmount = $("#payedAmount").val();
+          var subType = $("#subType").val();
+          var zoneId = parseInt($("#zoneId").val()); // Parse as integer
+
+          $.ajax({
+            url: "/api/v1/payment/subscription",
+            method: "POST",
+            data: JSON.stringify({
+              creditCardNumber: creditCardNumber,
+              holderName: holderName,
+              payedAmount: payedAmount,
+              subType: subType,
+              zoneId: zoneId,
+            }),
+            contentType: "application/json",
+            success: function (data) {
+              console.log(data);
+              $("#subscriptionResult").text(data.message);
+              $("#subscriptionResult").show();
+              setTimeout(function () {
+                $("#subscriptionResult").hide();
+              }, 3000);
+            },
+            error: function (xhr, status, error) {
+              console.log(error);
+              $("#subscriptionResult").text(
+                "Error processing subscription payment"
+              );
+              $("#subscriptionResult").show();
+              setTimeout(function () {
+                $("#subscriptionResult").hide();
+              }, 3000);
+            },
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container" style="margin-top: 20px"></div>
+    <div class="container">
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="/dashboard">Dashboard</a>
+          </div>
+          <ul class="nav navbar-nav">
+            <li class="active">
+              <a href="/dashboard"><i class="fas fa-home"></i> Home</a>
+            </li>
+            <li>
+              <a href="/stations"><i class="fas fa-subway"></i> Station </a>
+            </li>
+            <li class="dropdown">
+              <a
+                href="#"
+                class="dropdown-toggle"
+                data-toggle="dropdown"
+                role="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="fas fa-shopping-cart"></i> Shop
+                <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="/tickets"
+                    ><i class="fas fa-ticket-alt"></i> Tickets</a
+                  >
+                </li>
+                <!-- Add other shop-related options here -->
+              </ul>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a href="/"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <h1>Subscriptions</h1>
+      <form id="subscriptionForm">
+        <div class="form-group">
+          <label for="creditCardNumber">Credit Card Number:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="creditCardNumber"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="holderName">Card Holder Name:</label>
+          <input type="text" class="form-control" id="holderName" required />
+        </div>
+        <div class="form-group">
+          <label for="payedAmount">Amount:</label>
+          <input type="number" class="form-control" id="payedAmount" required />
+        </div>
+        <div class="form-group">
+          <label for="subType">Subscription Type:</label>
+          <select class="form-control" id="subType">
+            <option value="annual">Annual</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="zoneId">Zone ID:</label>
+          <select class="form-control" id="zoneId" required>
+            <!-- Options will be dynamically added here -->
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+      <div id="subscriptionResult" style="display: none"></div>
+    </div>
+  </body>
+</html>

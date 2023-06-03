@@ -704,4 +704,77 @@ module.exports = function (app) {
       res.status(500).json({ error: "Error retrieving user rides" });
     }
   });
+
+  app.post("/api/v1/payment/subscription", async function (req, res) {
+    try {
+      const user = await getUser(req);
+      const userId = user.userid;
+      const {
+        creditCardNumber,
+        holderName,
+        payedAmount,
+        subType,
+        zoneId,
+      } = req.body;
+
+      // Validate payedAmount
+      if (!payedAmount) {
+        return res.status(400).json({ error: "Payment amount is missing" });
+      }
+
+      let paid = payedAmount;
+      if (user.roleid === 3) {
+        paid = paid / 2; // 50% discount applied for senior role
+      }
+
+      let nooftickets = 0;
+      if (subType === "annual" && payedAmount === 100) {
+        nooftickets = 100;
+      } else if (subType === "quarterly" && payedAmount === 50) {
+        nooftickets = 50;
+      } else if (subType === "monthly" && payedAmount === 25) {
+        nooftickets = 10;
+      } else {
+        return res.status(400).json({ error: `Invalid payment for ${subType} subscription` });
+      }
+
+      const subscription = {
+        subtype: subType,
+        zoneid: zoneId,
+        userid: user.id,
+        nooftickets: nooftickets,
+      };
+
+      const insertedSubscription = await db("se_project.subscription")
+        .insert(subscription)
+        .returning("*");
+
+      const purchasedId = insertedSubscription[0].id;
+
+      const transaction = {
+        amount: payedAmount,
+        userid: user.id,
+        purchasedid: purchasedId,
+        purchasetype: "subscription",
+      };
+
+      const insertedTransaction = await db("se_project.transactions")
+        .insert(transaction)
+        .returning("id");
+
+      const subscriptionId = insertedSubscription[0].id;
+      const transactionId = insertedTransaction[0];
+
+      return res.status(200).json({
+        message: "Payment successful",
+        subscriptionId: subscriptionId,
+        transactionId: transactionId,
+        paid: paid,
+      });
+
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Could not process subscription payment");
+    }
+  });
 };
