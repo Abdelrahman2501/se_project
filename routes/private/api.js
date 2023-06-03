@@ -113,14 +113,12 @@ module.exports = function (app) {
           destination: destination,
           tripdate: tripDate,
           userid: userId,
-          status: "upcoming",
+          status: "upcoming"
         })
         .first();
 
       if (!ride) {
-        return res
-          .status(404)
-          .send("No upcoming ride found with the provided details");
+        return res.status(404).send("No upcoming ride found with the provided details");
       }
 
       await db("se_project.rides")
@@ -130,7 +128,7 @@ module.exports = function (app) {
       return res.status(200).send("Ride simulation successful");
     } catch (e) {
       console.log(e.message);
-      return res.status(500).send("Error simulating ride");
+      return res.status(500).send("Ride simulation failed");
     }
   });
 

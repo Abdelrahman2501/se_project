@@ -80,6 +80,20 @@
                       Tickets
                     </a>
                   </li>
+                  <li>
+                    <a href="/subscriptions">
+                      <i class="fas fa-calendar-alt"></i>
+                      Subscriptions
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/buyTicketsBySubscription">
+                      <i class="fas fa-money-check"></i>
+                      Buy Tickets by Subscription
+                    </a>
+                  </li>
+                  <!-- Add other shop-related options here -->
+
                   <!-- Add other shop-related options here -->
                 </ul>
               </li>

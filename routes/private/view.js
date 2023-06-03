@@ -77,13 +77,13 @@ module.exports = function (app) {
   });
 
   app.get('/manage/requests/refund', async function (req, res) {
-    const users = await db.select('*').from('se_project.senior_requests');
+    const users = await db.select('*').from('se_project.refund_requests');
     return res.render('manageRefund');
   });
 
   app.get('/rides', async function (req, res) {
-    const users = await db.select('*').from('se_project.senior_requests');
-    return res.render('rides');
+    const ride = await db.select('*').from('se_project.rides');
+    return res.render('rides', { ride });
   });
 
 };

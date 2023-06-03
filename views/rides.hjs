@@ -21,33 +21,105 @@
       #rides-table td {
         vertical-align: middle;
       }
+
+      .selected {
+        background-color: #f2f2f2;
+      }
     </style>
     <script>
       $(document).ready(function () {
-        $.ajax({
-          url: "/api/v1/ridesUser",
-          type: "GET",
-          success: function (rides) {
-            var ridesTable = $("#rides-table");
-            var tbody = ridesTable.find("tbody");
+        // Highlight selected row
+        $("#rides-table tbody").on("click", "tr", function () {
+          // Remove highlighting from previously selected rows
+          $("#rides-table tbody tr").removeClass("selected");
+          // Add highlighting to the selected row
+          $(this).addClass("selected");
 
-            rides.forEach(function (ride) {
-              var row = $("<tr>");
+          // Retrieve the data from the selected row
+          var rideId = $(this).find("td:first").text();
+          var origin = $(this).find("td:nth-child(3)").text();
+          var destination = $(this).find("td:nth-child(4)").text();
+          var tripDate = $(this).find("td:nth-child(7)").text();
 
-              row.append($("<td>").text(ride.id));
-              row.append($("<td>").text(ride.status));
-              row.append($("<td>").text(ride.origin));
-              row.append($("<td>").text(ride.destination));
-              row.append($("<td>").text(ride.userid));
-              row.append($("<td>").text(ride.ticketid));
-              row.append($("<td>").text(ride.tripdate));
+          // Format the date as "YYYY-MM-DD"
+          var formattedDate = new Date(tripDate).toISOString().split("T")[0];
 
-              tbody.append(row);
-            });
-          },
-          error: function () {
-            alert("Error retrieving rides");
-          },
+          // Update the input fields with the selected ride's details
+          $("#origin").val(origin);
+          $("#destination").val(destination);
+          $("#trip-date").val(formattedDate);
+        });
+
+        // Simulate ride action
+        function simulateRide(origin, destination, tripDate) {
+          var tripTime = "00:00:00";
+          var formattedTripDate = tripDate + "T" + tripTime;
+          $.ajax({
+            url: "/api/v1/ride/simulate",
+            type: "PUT",
+            data: {
+              origin: origin,
+              destination: destination,
+              tripDate: formattedTripDate,
+            },
+            success: function (response) {
+              alert(response);
+              // Refresh the rides table after successful simulation
+              refreshRidesTable();
+            },
+            error: function () {
+              alert("Error simulating ride");
+            },
+          });
+        }
+
+        // Retrieve and display rides
+        function getRides() {
+          $.ajax({
+            url: "/api/v1/ridesUser",
+            type: "GET",
+            success: function (rides) {
+              var ridesTable = $("#rides-table");
+              var tbody = ridesTable.find("tbody");
+
+              // Clear the existing table rows
+              tbody.empty();
+
+              rides.forEach(function (ride) {
+                var row = $("<tr>");
+
+                row.append($("<td>").text(ride.id));
+                row.append($("<td>").text(ride.status));
+                row.append($("<td>").text(ride.origin));
+                row.append($("<td>").text(ride.destination));
+                row.append($("<td>").text(ride.userid));
+                row.append($("<td>").text(ride.ticketid));
+                row.append($("<td>").text(ride.tripdate));
+
+                tbody.append(row);
+              });
+            },
+            error: function () {
+              alert("Error retrieving rides");
+            },
+          });
+        }
+
+        // Function to refresh the rides table
+        function refreshRidesTable() {
+          getRides();
+        }
+
+        // Initial load of rides table
+        getRides();
+
+        // Handle click event for simulate ride button
+        $("#simulate-ride").click(function () {
+          var origin = $("#origin").val();
+          var destination = $("#destination").val();
+          var tripDate = $("#trip-date").val();
+
+          simulateRide(origin, destination, tripDate);
         });
       });
     </script>
@@ -112,6 +184,20 @@
         </thead>
         <tbody></tbody>
       </table>
+      <h2>Simulate Ride</h2>
+      <div class="form-group">
+        <label for="origin">Origin:</label>
+        <input type="text" class="form-control" id="origin" />
+      </div>
+      <div class="form-group">
+        <label for="destination">Destination:</label>
+        <input type="text" class="form-control" id="destination" />
+      </div>
+      <div class="form-group">
+        <label for="trip-date">Trip Date:</label>
+        <input type="date" class="form-control" id="trip-date" />
+      </div>
+      <button id="simulate-ride" class="btn btn-primary">Simulate Ride</button>
     </div>
   </body>
 </html>
