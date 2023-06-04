@@ -145,6 +145,12 @@
                   Station
                 </a>
               </li>
+              <li>
+                <a href="/stations">
+                  <i class="fas fa-route"></i>
+                  Routes
+                </a>
+              </li>
               <li class="dropdown">
                 <a
                   href="#"

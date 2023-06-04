@@ -1,6 +1,7 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <title>Senior Request</title>
+    <title>Routes</title>
     <link rel="stylesheet" href="/styles/bootstrap.min.css" />
     <link rel="stylesheet" href="/styles/style.css" />
     <link
@@ -15,7 +16,7 @@
         background-color: #f1f1f1;
       }
 
-      .station {
+      .route {
         background-color: #fff;
         border-radius: 10px;
         padding: 20px;
@@ -23,42 +24,37 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
 
-      .station h3 {
+      .route h3 {
         margin-top: 0;
         color: #333;
       }
 
-      .station p {
+      .route p {
         margin-bottom: 5px;
         color: #666;
       }
     </style>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/js/bootstrap.min.js" type="text/javascript"></script>
     <script>
       $(document).ready(function () {
         $.ajax({
-          url: "/api/v1/stations",
+          url: "/api/v1/routes",
           type: "GET",
-          success: function (stations) {
-            var stationsContainer = $("#stations-container");
-            stations.forEach(function (station) {
-              var stationElement = $("<div>").addClass("station");
-              stationElement.append($("<h3>").text(station.stationname));
-              stationElement.append(
-                $("<p>").text("Type: " + station.stationtype)
+          success: function (routes) {
+            var routesContainer = $("#routes-container");
+            routes.forEach(function (route) {
+              var routeElement = $("<div>").addClass("route");
+              routeElement.append($("<h3>").text(route.routename));
+              routeElement.append(
+                $("<p>").text("From Station ID: " + route.fromstationid)
               );
-              stationElement.append(
-                $("<p>").text("Position: " + station.stationposition)
+              routeElement.append(
+                $("<p>").text("To Station ID: " + route.tostationid)
               );
-              stationElement.append(
-                $("<p>").text("Status: " + station.stationstatus)
-              );
-              stationsContainer.append(stationElement);
+              routesContainer.append(routeElement);
             });
           },
           error: function () {
-            alert("Error retrieving stations");
+            alert("Error retrieving routes");
           },
         });
       });
@@ -130,8 +126,8 @@
           </ul>
         </div>
       </nav>
-      <h1>Stations</h1>
-      <div id="stations-container"></div>
+      <h1>Routes</h1>
+      <div id="routes-container"></div>
     </div>
   </body>
 </html>

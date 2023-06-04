@@ -91,5 +91,9 @@ module.exports = function (app) {
     return res.render('subscriptions', { subscriptions });
   });
 
+  app.get('/routes', async function (req, res) {
+    const routes = await db.select('*').from('se_project.routes');
+    return res.render('routes', { routes });
+  });
 
 };
