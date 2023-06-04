@@ -183,9 +183,6 @@
                       Buy Tickets by Subscription
                     </a>
                   </li>
-                  <!-- Add other shop-related options here -->
-
-                  <!-- Add other shop-related options here -->
                 </ul>
               </li>
             </ul>
@@ -227,6 +224,12 @@
                     <a href="/rides">
                       <i class="fas fa-subway"></i>
                       Rides
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/status">
+                      <i class="fas fa-info-circle"></i>
+                      Requests Status
                     </a>
                   </li>
                   <!-- Add other user-related options here -->

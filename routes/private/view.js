@@ -96,4 +96,10 @@ module.exports = function (app) {
     return res.render('routes', { routes });
   });
 
+  app.get('/status', async function (req, res) {
+    const senior_requests = await db.select('*').from('se_project.senior_requests');
+    const refund_requests = await db.select('*').from('se_project.refund_requests');
+    return res.render('status', { senior_requests, refund_requests });
+  });
+
 };

@@ -899,6 +899,24 @@ module.exports = function (app) {
     }
   });
 
+  //get refund req of user
+  app.get("/api/v1/refundUser", async function (req, res) {
+    try {
+      const user = await getUser(req);
+      const userId = user.userid;
+
+      const refund = await db
+        .select('*')
+        .from('se_project.refund_requests')
+        .where('userid', userId);
+
+      res.status(200).json(refund);
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).json({ error: "Error retrieving user refunds" });
+    }
+  });
+
   //get senior req of user
   app.get("/api/v1/viewSenior", async function (req, res) {
     try {
