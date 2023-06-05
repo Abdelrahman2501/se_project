@@ -20,7 +20,6 @@
           <div class="navbar-header">
             <a class="navbar-brand" href="/dashboard">Dashboard</a>
           </div>
-          <div class="container" style="margin-top: 20px"></div>
           <ul class="nav navbar-nav">
             <li class="active">
               <a href="/dashboard"><i class="fas fa-home"></i> Home</a>
@@ -51,7 +50,6 @@
                     Check Price
                   </a>
                 </li>
-
                 <li>
                   <a href="/tickets">
                     <i class="fas fa-ticket-alt"></i>
@@ -70,6 +68,9 @@
                     Buy Tickets by Subscription
                   </a>
                 </li>
+                <!-- Add other shop-related options here -->
+
+                <!-- Add other shop-related options here -->
               </ul>
             </li>
           </ul>
@@ -80,8 +81,11 @@
           </ul>
         </div>
       </nav>
-      <h1>Buy Tickets By Subscriptions</h1>
-      <script></script>
+      <div class="container">
+        <h1>Check Requests</h1>
+        <div id="refundRequestsTable"></div>
+        <div id="seniorRequestsTable"></div>
+      </div>
     </div>
   </body>
 </html>
