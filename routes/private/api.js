@@ -190,10 +190,11 @@ module.exports = function (app) {
         return res.status(404).json({ message: "Ticket not found" });
       }
 
-      if (ticketId.tripDate < Date.now()) {
-        return res
-          .status(400)
-          .json({ message: "Ticket is not eligible for refund" });
+      const currentDate = new Date();
+      const tripDate = new Date(refundTicket.tripdate);
+
+      if (tripDate < currentDate) {
+        return res.status(400).send('Cannot refund an expired ticket');
       }
 
       const refundRequest = {
@@ -407,52 +408,6 @@ module.exports = function (app) {
     catch (e) {
       console.log(e.message);
       res.status(400).send("Error while purchasing the ticket.");
-    }
-  });
-
-  //check price
-  app.get('/api/v1/tickets/price/:originId&:destinationId', async function (req, res) {
-    try {
-      const { originId, destinationId } = req.params;
-
-      const stationid = await db.select('id').from("se_project.stations");
-      const routeid = await db.select('routeid').from('se_project.stationroutes').where('stationid', stationid);
-
-      const origin = await db('se_project.routes').where('id', routeid).andWhere('fromstationid', originId);
-      const destination = await db('se_project.routes').where('id', routeid).andWhere('tostationid', destinationId);
-
-      const stations = await db('se_project.stations')
-        .whereIn('id', function () {
-          this.select('stationid')
-            .from('se_project.stationroutes')
-            .where('routeid', routeid)
-            .andWhere(function () {
-              if (origin.stationid < destination.stationid) {
-                this.whereBetween('id', [origin.stationid, destination.stationid]);
-              } else {
-                this.whereBetween('id', [destination.stationid, origin.stationid]);
-              }
-            });
-        });
-
-      const amount = stations.length;
-      if (amount === 0) { //no routes where found 
-        return res.status(404).send('No routes found for the given origin and destination');
-      }
-      if (amount <= 9) {
-        price = 5;
-      }
-      else if (amount >= 10 & amount <= 16) {
-        price = 7;
-      }
-      else {
-        price = 10;
-      }
-      res.status(200).send(`Price of ticket: ${price}`);
-
-    } catch (error) {
-      console.error('Error checking ticket price:', error);
-      return res.status(500).send('An error occurred while checking the ticket price');
     }
   });
 
@@ -693,26 +648,51 @@ module.exports = function (app) {
         return res.status(400).json({ error: "Payment amount is missing" });
       }
 
+      let nooftickets = 0;
       let paid = payedAmount;
       if (user.roleid === 3) {
         paid = paid / 2; // 50% discount applied for senior role
+        if (subType === "annual" && parseInt(payedAmount) === 50) {
+          nooftickets = 100;
+        } else if (subType === "quarterly" && parseInt(payedAmount) === 25) {
+          nooftickets = 50;
+        } else if (subType === "monthly" && parseInt(payedAmount) === 5) {
+          nooftickets = 10;
+        } else {
+          return res
+            .status(400)
+            .json({ error: `Invalid payment for ${subType} subscription` });
+        }
+      } else if (user.roleid !== 3) {
+        if (subType === "annual" && parseInt(payedAmount) === 100) {
+          nooftickets = 100;
+        } else if (subType === "quarterly" && parseInt(payedAmount) === 50) {
+          nooftickets = 50;
+        } else if (subType === "monthly" && parseInt(payedAmount) === 25) {
+          nooftickets = 10;
+        } else {
+          return res
+            .status(400)
+            .json({ error: `Invalid payment for ${subType} subscription` });
+        }
       }
 
-      let nooftickets = 0;
-      if (subType === "annual" && payedAmount === 100) {
-        nooftickets = 100;
-      } else if (subType === "quarterly" && payedAmount === 50) {
-        nooftickets = 50;
-      } else if (subType === "monthly" && payedAmount === 25) {
-        nooftickets = 10;
-      } else {
-        return res.status(400).json({ error: `Invalid payment for ${subType} subscription` });
+      // Check if the user has any active subscription with remaining tickets
+      const activeSubscription = await db("se_project.subscription")
+        .where({ userid: userId })
+        .andWhere("nooftickets", ">", 0)
+        .first();
+
+      if (activeSubscription) {
+        return res.status(400).json({
+          error: "You have an active subscription with remaining tickets",
+        });
       }
 
       const subscription = {
         subtype: subType,
         zoneid: zoneId,
-        userid: user.id,
+        userid: userId,
         nooftickets: nooftickets,
       };
 
@@ -724,7 +704,7 @@ module.exports = function (app) {
 
       const transaction = {
         amount: payedAmount,
-        userid: user.id,
+        userid: userId,
         purchasedid: purchasedId,
         purchasetype: "subscription",
       };
@@ -742,14 +722,15 @@ module.exports = function (app) {
         transactionId: transactionId,
         paid: paid,
       });
-
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not process subscription payment");
     }
   });
 
-  app.get("/api/v1/tickets/price/:originId/:destinationId", async function (req, res) {
+
+
+  app.get("/api/v1/tickets/price/:originId & :destinationId", async function (req, res) {
     try {
       let { originId, destinationId } = req.params;
 
@@ -955,6 +936,57 @@ module.exports = function (app) {
       console.log(e.message);
       res.status(500).json({ error: "Error retrieving user's subscription" });
     }
+  });
+
+  app.get('/api/v1/tickets/price/:originId&:destinationId', async (req, res) => {
+    try {
+      let { originId, destinationId } = req.params;
+      let stationsCount = 1;
+      let destinationReached = false;
+      let visitedStationsSet = new Set();
+      visitedStationsSet.add(originId);
+
+      while (true) {
+        const toStationidsObjects = await db.select('tostationid').from('se_project.routes').where('fromstationid', originId);
+        stationsCount++;
+        let furthestStationId = 0;
+
+        for (let i = 0; i < toStationidsObjects.length; i++) {
+          let toStationId = toStationidsObjects[i].tostationid;
+          if (visitedStationsSet.has(toStationId)) {
+            continue;
+          } else {
+            visitedStationsSet.add(toStationId);
+          }
+          if (toStationId == destinationId) {
+            destinationReached = true;
+            break;
+          }
+          if (toStationId < destinationId && toStationId > furthestStationId) {
+            furthestStationId = toStationId;
+          }
+        }
+
+        if (destinationReached) {
+          break;
+        }
+        originId = furthestStationId;
+      }
+      if (stationsCount <= 5) {
+        price = 5;
+      }
+      else if (stationsCount >= 6 & stationsCount <= 10) {
+        price = 15;
+      }
+      else {
+        price = 20;
+      }
+      res.status(200).json({ stationsCount: stationsCount, price: price });
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).json({ error: "Error retrieving user's subscription" });
+    }
+
   });
 
 };
