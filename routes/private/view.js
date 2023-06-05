@@ -105,6 +105,6 @@ module.exports = function (app) {
   app.get('/buyTicketsBySubscription', async function (req, res) {
     const subscription = await db.select('*').from('se_project.subscription');
     const ticket = await db.select('*').from('se_project.tickets');
-    return res.render('status', { subscription, ticket });
+    return res.render('ticketSub', { subscription, ticket });
   });
 };

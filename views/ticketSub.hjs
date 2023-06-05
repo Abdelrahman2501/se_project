@@ -11,8 +11,6 @@
     <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
     <script src="/js/bootstrap.min.js" type="text/javascript"></script>
     <style></style>
-    <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
-    <script src="/js/bootstrap.min.js" type="text/javascript"></script>
   </head>
   <body>
     <div class="container" style="margin-top: 20px"></div>
@@ -47,6 +45,13 @@
                 <span class="caret"></span>
               </a>
               <ul class="dropdown-menu">
+                <li>
+                  <a href="/checkPrice">
+                    <i class="fas fa-calculator"></i>
+                    Check Price
+                  </a>
+                </li>
+
                 <li>
                   <a href="/tickets">
                     <i class="fas fa-ticket-alt"></i>
