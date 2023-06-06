@@ -45,10 +45,10 @@
               var routeElement = $("<div>").addClass("route");
               routeElement.append($("<h3>").text(route.routename));
               routeElement.append(
-                $("<p>").text("From Station ID: " + route.fromstationid)
+                $("<p>").text("From Station: " + route.fromstationname)
               );
               routeElement.append(
-                $("<p>").text("To Station ID: " + route.tostationid)
+                $("<p>").text("To Station: " + route.tostationname)
               );
               routesContainer.append(routeElement);
             });

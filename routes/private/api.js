@@ -190,6 +190,7 @@ module.exports = function (app) {
         return res.status(404).json({ message: "Ticket not found" });
       }
 
+      const refundTicket = await db('se_project.tickets').where('id', ticketId).first();
       const currentDate = new Date();
       const tripDate = new Date(refundTicket.tripdate);
 
@@ -337,105 +338,6 @@ module.exports = function (app) {
       return res.status(400).send("Error updating senior request status.");
     }
   });
-
-  // const transformDataForBfs = function (stations, routes, stationRoutes) {
-  //   let graph = {};
-
-  //   // Initialize the graph with station ids as keys and empty arrays as values
-  //   for (let station of stations) {
-  //     graph[station.id] = [];
-  //   }
-
-  //   // Populate the adjacency list
-  //   for (let stationRoute of stationRoutes) {
-  //     let route = routes.find((route) => route.id === stationRoute.routeid);
-  //     if (route) {
-  //       let { fromstationid, tostationid } = route;
-  //       // Check if the current station is the fromStation or the toStation in the route
-  //       if (stationRoute.stationid === fromstationid) {
-  //         graph[fromstationid].push(tostationid);
-  //       } else if (stationRoute.stationid === tostationid) {
-  //         graph[tostationid].push(fromstationid);
-  //       }
-  //     }
-  //   }
-
-  //   return graph;
-  // };
-
-  // const bfs = function (graph, startNode, endNode) {
-  //   let queue = [];
-  //   let visited = {};
-
-  //   // Start from the starting node
-  //   queue.push([startNode]);
-  //   visited[startNode] = true;
-
-  //   while (queue.length > 0) {
-  //     let path = queue.shift(); // get the path out from the queue
-  //     let node = path[path.length - 1]; // get the last node from the path
-
-  //     if (node === endNode) {
-  //       // Path found
-  //       return path;
-  //     }
-
-  //     if (!graph[node]) {
-  //       // No adjacent nodes for the current node
-  //       continue;
-  //     }
-
-  //     for (let neighbor of graph[node]) {
-  //       if (!visited[neighbor]) {
-  //         visited[neighbor] = true; // mark node as visited
-  //         let newPath = [...path]; // create a new path
-  //         newPath.push(neighbor); // push the neighbor to the path
-  //         queue.push(newPath); // insert the new path to the queue
-  //       }
-  //     }
-  //   }
-
-  //   // No path found
-  //   return [];
-  // };
-
-  // const getPrice = async function (req) {
-  //   try {
-  //     let { originId, destinationId } = req.params;
-
-  //     originId = parseInt(originId);
-  //     destinationId = parseInt(destinationId);
-
-  //     // Fetch stations, routes and stationroutes data
-  //     const stations = await db.select('*').from('se_project.stations');
-  //     const routes = await db.select('*').from('se_project.routes');
-  //     const stationRoutes = await db.select('*').from('se_project.stationroutes');
-
-  //     // Transform data into a form suitable for BFS
-  //     const graph = transformDataForBfs(stations, routes, stationRoutes);
-
-  //     // Run BFS to find shortest path
-  //     const path = bfs(graph, originId, destinationId);
-
-  //     if (path.length === 0) {
-  //       throw new Error('No route found between the specified stations.');
-  //     }
-
-  //     let price;
-  //     if (path.length <= 9) {
-  //       price = 5;
-  //     } else if (path.length <= 16) {
-  //       price = 7;
-  //     } else {
-  //       price = 10;
-  //     }
-
-  //     return price;
-  //   } catch (e) {
-  //     console.error(e.message);
-  //     throw new Error("An error occurred while calculating the price.");
-  //   }
-  // };
 
   app.post("/api/v1/payment/ticket", async function (req, res) {
     try {
@@ -931,13 +833,22 @@ module.exports = function (app) {
   //get table routes
   app.get('/api/v1/routes', async function (req, res) {
     try {
-      const routes = await db('se_project.routes').select('*');
+      const routes = await db('se_project.routes')
+        .select(
+          'routes.id',
+          'routes.routename',
+          'fromStation.stationname AS fromstationname',
+          'toStation.stationname AS tostationname'
+        )
+        .join('se_project.stations AS fromStation', 'routes.fromstationid', 'fromStation.id')
+        .join('se_project.stations AS toStation', 'routes.tostationid', 'toStation.id');
       res.json(routes);
     } catch (e) {
       console.error('Error retrieving routes:', e);
       res.status(500).json({ error: 'An error occurred while retrieving routes.' });
     }
   });
+
 
   //get table stations
   app.get('/api/v1/stations', async function (req, res) {
@@ -1015,7 +926,7 @@ module.exports = function (app) {
     }
   });
 
-  //get senior sub of user
+  //get sub of user
   app.get("/api/v1/viewSub", async function (req, res) {
     try {
       const user = await getUser(req);
@@ -1086,6 +997,71 @@ module.exports = function (app) {
       res.status(500).json({ error: "Error retrieving user's subscription" });
     }
 
+  });
+
+  app.post('/api/v1/tickets/purchase/subscription', async function (req, res) {
+    try {
+      const user = await getUser(req);
+      const userId = user.userid;
+      const { subId, origin, destination, tripDate } = req.body;
+
+      const subscription = await db("se_project.subscription")
+        .select("nooftickets")
+        .where("userid", userId)
+        .first();
+
+      if (subscription) {
+        const noTickets = subscription.nooftickets;
+
+        if (noTickets !== 0) {
+          const ticket = await db('se_project.tickets').insert({
+            origin,
+            destination,
+            subid: subId,
+            userid: userId,
+            tripdate: tripDate,
+          }).returning('*');
+
+          let purchasedId = ticket[0].id;
+          const transaction = await db("se_project.transactions")
+            .insert({
+              amount: 0,
+              userid: userId,
+              purchasedid: purchasedId,
+              purchasetype: "SubTicket",
+            })
+            .returning("*");
+
+          const ride = await db("se_project.rides")
+            .insert({
+              status: "upcoming",
+              origin,
+              destination,
+              userid: userId,
+              ticketid: ticket[0].id,
+              tripdate: tripDate,
+            })
+            .returning("*");
+
+          const newNoTickets = noTickets - 1;
+
+          console.log("newNoTickets:", newNoTickets);
+
+          await db("se_project.subscription")
+            .where("id", subId)
+            .update({ nooftickets: newNoTickets });
+
+          res.status(200).json({ message: 'Ticket purchased successfully.', ticket });
+        } else {
+          res.status(200).json({ message: 'No tickets in your subscription!' });
+        }
+      } else {
+        res.status(400).json({ message: 'Invalid subscription ID!' });
+      }
+    } catch (e) {
+      console.log(e.message);
+      res.status(400).send('An error occurred while processing the ticket purchase.');
+    }
   });
 
 };
