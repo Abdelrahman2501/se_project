@@ -107,4 +107,10 @@ module.exports = function (app) {
     const ticket = await db.select('*').from('se_project.tickets');
     return res.render('ticketSub', { subscription, ticket });
   });
+
+  app.get('/checkPrice', async function (req, res) {
+    const pStations = await db.select('*').from('se_project.stations');
+    const proutes = await db.select('*').from('se_project.routes');
+    return res.render('checkPrice', { pStations, proutes });
+  });
 };

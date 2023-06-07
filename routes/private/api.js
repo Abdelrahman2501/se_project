@@ -853,7 +853,7 @@ module.exports = function (app) {
   //get table stations
   app.get('/api/v1/stations', async function (req, res) {
     try {
-      const stations = await db('se_project.stations').select('*');
+      const stations = await db('se_project.stations').select('*').orderBy('id');
       res.json(stations);
     } catch (e) {
       console.error('Error retrieving stations:', e);
