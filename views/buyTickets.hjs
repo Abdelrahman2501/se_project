@@ -70,12 +70,12 @@
               $.each(stations, function (index, station) {
                 originSelect.append(
                   $("<option></option>")
-                    .val(station.id)
+                    .val(station.stationname)
                     .text(station.stationname)
                 );
                 destinationSelect.append(
                   $("<option></option>")
-                    .val(station.id)
+                    .val(station.stationname)
                     .text(station.stationname)
                 );
               });
@@ -85,7 +85,6 @@
             },
           });
         }
-
         function getPrice(originId, destinationId) {
           $.ajax({
             url: "/api/v1/tickets/price/" + originId + "&" + destinationId,
@@ -174,6 +173,12 @@
                   <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
+                  <li>
+                    <a href="/checkPrice">
+                      <i class="fas fa-calculator"></i>
+                      Check Price
+                    </a>
+                  </li>
                   <li>
                     <a href="/tickets">
                       <i class="fas fa-ticket-alt"></i>

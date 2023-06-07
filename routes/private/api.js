@@ -652,12 +652,11 @@ module.exports = function (app) {
       let nooftickets = 0;
       let paid = payedAmount;
       if (user.roleid === 3) {
-        paid = paid / 2; // 50% discount applied for senior role
         if (subType === "annual" && parseInt(payedAmount) === 50) {
           nooftickets = 100;
         } else if (subType === "quarterly" && parseInt(payedAmount) === 25) {
           nooftickets = 50;
-        } else if (subType === "monthly" && parseInt(payedAmount) === 5) {
+        } else if (subType === "monthly" && parseInt(payedAmount) === 10) {
           nooftickets = 10;
         } else {
           return res
@@ -669,7 +668,7 @@ module.exports = function (app) {
           nooftickets = 100;
         } else if (subType === "quarterly" && parseInt(payedAmount) === 50) {
           nooftickets = 50;
-        } else if (subType === "monthly" && parseInt(payedAmount) === 25) {
+        } else if (subType === "monthly" && parseInt(payedAmount) === 20) {
           nooftickets = 10;
         } else {
           return res

@@ -103,15 +103,15 @@
                     Buy Tickets by Subscription
                   </a>
                 </li>
-                <!-- Add other shop-related options here -->
-
-                <!-- Add other shop-related options here -->
               </ul>
             </li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li>
-              <a href="/"><i class="fas fa-sign-out-alt"></i> Logout</a>
+              <a href="/">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
             </li>
           </ul>
         </div>

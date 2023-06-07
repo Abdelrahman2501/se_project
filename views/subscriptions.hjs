@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Subscriptions</title>
+    <title>Buy Tickets By Subscriptions</title>
     <link rel="stylesheet" href="/styles/bootstrap.min.css" />
     <link rel="stylesheet" href="/styles/style.css" />
     <link
@@ -10,148 +10,175 @@
     />
     <link rel="stylesheet" href="/styles/custom-style.css" />
     <style>
-      /* Custom styles */
+      /* Additional custom styles */
+      body {
+        padding-top: 20px;
+      }
+
       .container {
         margin-top: 20px;
       }
 
-      h1 {
+      .page-title {
         margin-bottom: 20px;
       }
 
-      label {
-        font-weight: bold;
+      .form-container {
+        max-width: 500px;
+        margin: 0 auto;
       }
 
-      input[type="text"],
-      input[type="number"],
-      select {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-      }
-
-      button[type="submit"] {
-        background-color: #4caf50;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-
-      .alert {
-        display: none;
-        margin-top: 20px;
-      }
-
-      .alert-success {
-        background-color: #d4edda;
-        color: #155724;
-      }
-
-      .alert-danger {
-        background-color: #f8d7da;
-        color: #721c24;
-      }
-
-      /* Table styles */
-      .zone-table {
-        margin-top: 20px;
-        border-collapse: collapse;
-        width: 100%;
-      }
-
-      .zone-table th,
-      .zone-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-      }
-
-      .zone-table th {
-        background-color: #f2f2f2;
-      }
-
-      .zone-table tr:hover {
-        background-color: #f5f5f5;
-        cursor: pointer;
+      .table-container {
+        margin-top: 50px;
       }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="/js/jquery-2.2.0.min.js" type="text/javascript"></script>
     <script src="/js/bootstrap.min.js" type="text/javascript"></script>
     <script>
       $(document).ready(function () {
-        // Fetch zones and populate the table
+        // Fetch user's subscription data
         $.ajax({
+          url: "/api/v1/viewSub",
           type: "GET",
-          url: "/api/v1/zones",
-          success: function (zones) {
-            const tableBody = $("#zone-table-body");
-            zones.forEach(function (zone) {
-              const row = `<tr class="zone-row" data-zone-id="${zone.id}">
-               <td>${zone.id}</td>
-               <td>${zone.zonetype}</td>
-               <td>${zone.price}</td>
-             </tr>`;
-              tableBody.append(row);
-            });
+          success: function (response) {
+            if (response.error) {
+              console.log(response.error);
+            } else {
+              var tableBody = "";
+              for (var i = 0; i < response.length; i++) {
+                tableBody += "<tr>";
+                tableBody += "<td>" + response[i].id + "</td>";
+                tableBody += "<td>" + response[i].subtype + "</td>";
+                tableBody += "<td>" + response[i].zoneid + "</td>";
+                tableBody += "<td>" + response[i].userid + "</td>";
+                tableBody +=
+                  '<td id="ticketCount_' +
+                  response[i].id +
+                  '">' +
+                  response[i].nooftickets +
+                  "</td>";
+                tableBody += "</tr>";
+              }
+              $("#subscriptionTableBody").html(tableBody);
+            }
           },
           error: function (xhr, status, error) {
-            console.log("Error fetching zones");
+            console.log(error);
           },
         });
 
-        // Handle zone click event
-        $(document).on("click", ".zone-row", function () {
-          const zoneId = $(this).data("zone-id");
-          $("#zone-id").val(zoneId);
+        // Fetch stations data for populating dropdown menus
+        $.ajax({
+          url: "/api/v1/stations",
+          type: "GET",
+          success: function (response) {
+            if (response.error) {
+              console.log(response.error);
+            } else {
+              var stationOptions = "";
+              for (var i = 0; i < response.length; i++) {
+                stationOptions +=
+                  '<option value="' +
+                  response[i].stationname +
+                  '">' +
+                  response[i].stationname +
+                  "</option>";
+              }
+              $("#origin").html(stationOptions);
+              $("#destination").html(stationOptions);
+            }
+          },
+          error: function (xhr, status, error) {
+            console.log(error);
+          },
         });
 
         // Handle form submission
-        $("#subscription-form").submit(function (event) {
-          event.preventDefault(); // Prevent form from submitting normally
-
-          // Gather form data
-          const creditCardNumber = $("#credit-card-number").val();
-          const holderName = $("#holder-name").val();
-          const payedAmount = $("#payed-amount").val();
-          const subType = $("#sub-type").val();
-          const zoneId = $("#zone-id").val();
-
-          // Create payload
-          const payload = {
-            creditCardNumber,
-            holderName,
-            payedAmount,
-            subType,
-            zoneId,
+        $("#buySubscriptionForm").submit(function (event) {
+          event.preventDefault();
+          var subId = $("#subId").val();
+          var origin = $("#origin").val();
+          var destination = $("#destination").val();
+          var tripDate = $("#tripDate").val();
+          var requestData = {
+            subId: subId,
+            origin: origin,
+            destination: destination,
+            tripDate: tripDate,
           };
 
-          // Make AJAX request
+          // Disable the submit button to prevent multiple submissions
+          $("#submitBtn").attr("disabled", true);
+
+          // Make the API request to purchase ticket by subscription
           $.ajax({
+            url: "/api/v1/tickets/purchase/subscription",
             type: "POST",
-            url: "/api/v1/payment/subscription",
-            data: JSON.stringify(payload),
             contentType: "application/json",
+            data: JSON.stringify(requestData),
             success: function (response) {
-              // Handle success response
-              $("#success-message").text(response.message);
-              $("#success-message").fadeIn().delay(3000).fadeOut();
-              console.log(response.subscriptionId);
-              console.log(response.transactionId);
-              console.log(response.paid);
+              console.log(response);
+              if (response.error) {
+                showError(
+                  "An error occurred while processing the ticket purchase: " +
+                    response.error
+                );
+              } else if (response.notFound) {
+                showError(
+                  "No subscription found with the provided ID: " + subId
+                );
+              } else {
+                var subscriptionId = response.subscriptionId;
+                var updatedTicketCount = response.updatedTicketCount;
+
+                // Update the table cell with the updated number of tickets
+                $("#ticketCount_" + subscriptionId).text(updatedTicketCount);
+
+                showSuccess("Ticket purchased successfully.");
+              }
             },
             error: function (xhr, status, error) {
-              // Handle error response
-              const response = JSON.parse(xhr.responseText);
-              $("#error-message").text(response.error);
-              $("#error-message").fadeIn().delay(3000).fadeOut();
+              console.log(xhr.responseText);
+              showError(
+                "An error occurred while processing the ticket purchase."
+              );
+            },
+            complete: function () {
+              // Re-enable the submit button after the request is complete
+              $("#submitBtn").attr("disabled", false);
             },
           });
         });
+
+        function showSuccess(message) {
+          // Remove any existing success messages
+          $(".alert-success").remove();
+
+          var alertElement = $('<div class="alert alert-success"></div>').text(
+            message
+          );
+          showAlert(alertElement);
+        }
+
+        function showError(message) {
+          // Remove any existing error messages
+          $(".alert-danger").remove();
+
+          var alertElement = $('<div class="alert alert-danger"></div>').text(
+            message
+          );
+          showAlert(alertElement);
+        }
+
+        function showAlert(alertElement) {
+          var container = $(".container");
+          container.prepend(alertElement);
+          alertElement.fadeTo(2000, 500).slideUp(500, function () {
+            alertElement.slideUp(500);
+          });
+        }
       });
     </script>
   </head>
@@ -221,71 +248,47 @@
         </div>
       </nav>
 
-      <div class="row">
-        <div class="col-md-6 col-md-offset-3">
-          <h1>Subscriptions</h1>
+      <div class="container">
+        <h1>Buy Tickets by Subscription</h1>
+        <form id="buySubscriptionForm">
+          <div class="form-group">
+            <label for="subId">Subscription ID:</label>
+            <input type="text" class="form-control" id="subId" required />
+          </div>
+          <div class="form-group">
+            <label for="origin">Origin:</label>
+            <select class="form-control" id="origin" required>
+              <option value="">Select Origin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="destination">Destination:</label>
+            <select class="form-control" id="destination" required>
+              <option value="">Select Destination</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tripDate">Trip Date:</label>
+            <input type="date" class="form-control" id="tripDate" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Purchase Ticket</button>
+        </form>
+      </div>
 
-          <!-- Subscription form -->
-          <form id="subscription-form">
-            <div class="form-group">
-              <label for="credit-card-number">Credit Card Number:</label>
-              <input
-                type="text"
-                id="credit-card-number"
-                class="form-control"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="holder-name">Holder Name:</label>
-              <input
-                type="text"
-                id="holder-name"
-                class="form-control"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="payed-amount">Paid Amount:</label>
-              <input
-                type="number"
-                id="payed-amount"
-                class="form-control"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="sub-type">Subscription Type:</label>
-              <select id="sub-type" class="form-control" required>
-                <option value="annual">Annual (EGP 100)</option>
-                <option value="quarterly">Quarterly (EGP 50)</option>
-                <option value="monthly">Monthly (EGP 25)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="zone-id">Zone:</label>
-              <input type="text" id="zone-id" class="form-control" readonly />
-            </div>
-            <button type="submit" class="btn btn-primary">Subscribe</button>
-          </form>
-
-          <!-- Error and success messages -->
-          <div class="alert alert-danger" id="error-message"></div>
-          <div class="alert alert-success" id="success-message"></div>
-
-          <!-- Zone table -->
-          <table class="zone-table">
-            <thead>
-              <tr>
-                <th>Zone ID</th>
-                <th>Zone Type</th>
-                <th>Price</th>
-              </tr>
-            </thead>
-            <tbody id="zone-table-body"></tbody>
-          </table>
-        </div>
+      <div class="container">
+        <h1>Subscription Details</h1>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Subscription Type</th>
+              <th>Zone ID</th>
+              <th>User ID</th>
+              <th>No. of Tickets</th>
+            </tr>
+          </thead>
+          <tbody id="subscriptionTableBody"></tbody>
+        </table>
       </div>
     </div>
   </body>
