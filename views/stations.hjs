@@ -1,6 +1,7 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <title>Senior Request</title>
+    <title>Stations</title>
     <link rel="stylesheet" href="/styles/bootstrap.min.css" />
     <link rel="stylesheet" href="/styles/style.css" />
     <link
@@ -32,11 +33,23 @@
         margin-bottom: 5px;
         color: #666;
       }
+
+      .btn-container {
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .btn-container a {
+        margin-right: 10px;
+      }
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/js/bootstrap.min.js" type="text/javascript"></script>
     <script>
       $(document).ready(function () {
+        // Assume this variable is set based on the user's admin status
+        var isAdmin = true; // or false
+
         $.ajax({
           url: "/api/v1/stations",
           type: "GET",
@@ -54,6 +67,25 @@
               stationElement.append(
                 $("<p>").text("Status: " + station.stationstatus)
               );
+
+              // var btnContainer = $("<div>").addClass("btn-container");
+              // var updateButton = $("<a>")
+              //   .text("Update")
+              //   .addClass("btn btn-primary")
+              //   .attr("href", "/update-station?stationId=" + station.stationid);
+              // var deleteButton = $("<a>")
+              //   .text("Delete")
+              //   .addClass("btn btn-danger")
+              //   .attr("href", "/delete-station?stationId=" + station.stationid);
+
+              // Check if the user is an admin before appending the buttons
+              // if (isAdmin) {
+              //   btnContainer.append(updateButton);
+              //   btnContainer.append(deleteButton);
+              // }
+
+              // stationElement.append(btnContainer);
+
               stationsContainer.append(stationElement);
             });
           },
@@ -123,8 +155,6 @@
                     Buy Tickets by Subscription
                   </a>
                 </li>
-                <!-- Add other shop-related options here -->
-
                 <!-- Add other shop-related options here -->
               </ul>
             </li>
