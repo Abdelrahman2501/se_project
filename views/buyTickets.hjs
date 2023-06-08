@@ -70,12 +70,12 @@
               $.each(stations, function (index, station) {
                 originSelect.append(
                   $("<option></option>")
-                    .val(station.stationname)
+                    .val(station.id) // Use station ID as the option value
                     .text(station.stationname)
                 );
                 destinationSelect.append(
                   $("<option></option>")
-                    .val(station.stationname)
+                    .val(station.id) // Use station ID as the option value
                     .text(station.stationname)
                 );
               });
