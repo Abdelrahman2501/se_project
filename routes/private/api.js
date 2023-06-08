@@ -64,7 +64,7 @@ module.exports = function (app) {
 
       await db("se_project.users")
         .where("id", user.userid)
-        .update({ password: newpassword });
+        .update({ password: newpassword })
       return res.status(200).json("Your new password is: " + newpassword);
     } catch (e) {
       console.log(e.message);
@@ -72,67 +72,8 @@ module.exports = function (app) {
     }
   });
 
-  app.post("/api/v1/senior/request", async function (req, res) {
-    try {
-      const user = await getUser(req);
-      const { nationalId } = req.body;
-      const userId = user.userid;
+ 
 
-      const newRequest = {
-        status: "pending",
-        userid: userId,
-        nationalid: nationalId,
-      };
-
-      const existingRequest = await db("se_project.senior_requests")
-        .where({ userid: userId })
-        .first();
-
-      if (existingRequest) {
-        return res.status(409).send("Senior request already exists for the user");
-      }
-
-      await db("se_project.senior_requests").insert(newRequest);
-
-      return res.status(200).send("Request submitted successfully");
-    } catch (e) {
-      console.log(e.message);
-      return res.status(500).send("Request failed");
-    }
-  });
-
-  app.put("/api/v1/ride/simulate", async function (req, res) {
-    try {
-      const user = await getUser(req);
-      const { origin, destination, tripDate } = req.body;
-      const userId = user.userid;
-
-      const ride = await db("se_project.rides")
-        .where({
-          origin: origin,
-          destination: destination,
-          tripdate: tripDate,
-          userid: userId,
-          status: "upcoming",
-        })
-        .first();
-
-      if (!ride) {
-        return res
-          .status(404)
-          .send("No upcoming ride found with the provided details");
-      }
-
-      await db("se_project.rides")
-        .where("id", ride.id)
-        .update({ status: "completed" });
-
-      return res.status(200).send("Ride simulation successful");
-    } catch (e) {
-      console.log(e.message);
-      return res.status(500).send("Error simulating ride");
-    }
-  });
 
   app.post("/api/v1/station", async function (req, res) {
     try {
@@ -163,6 +104,8 @@ module.exports = function (app) {
         .insert(newStation)
         .returning("*");
 
+
+
       return res
         .status(200)
         .json("New station is inserted: " + insertedStation);
@@ -172,48 +115,7 @@ module.exports = function (app) {
     }
   });
 
-  app.get("/api/v1/zones", async function (req, res) {
-    try {
-      const zones = await db.select("*").from("se_project.zones");
-      return res.status(200).json(zones);
-    } catch (e) {
-      console.log(e.message);
-      return res.status(500).send("Error getting zones");
-    }
-  });
-
-  app.post("/api/v1/refund/:ticketId", async function (req, res) {
-    try {
-      const { ticketId } = req.params;
-      const user = await getUser(req);
-      const userId = user.userid;
-
-      if (!ticketId) {
-        return res.status(404).json({ message: "Ticket not found" });
-      }
-
-      if (ticketId.tripDate < Date.now()) {
-        return res
-          .status(400)
-          .json({ message: "Ticket is not eligible for refund" });
-      }
-
-      const refundRequest = {
-        status: "pending",
-        userid: userId,
-        refundamount: 0,
-        ticketid: ticketId,
-      };
-
-      const insertedRefundRequest = await db("se_project.refund_requests")
-        .insert(refundRequest)
-        .returning("*");
-      res.status(201).json({ message: "Refund request created" });
-    } catch (e) {
-      console.log(e.message);
-      return res.status(500).send("Error requesting refund");
-    }
-  });
+  
 
   app.post("/api/v1/route", async function (req, res) {
     try {
@@ -229,6 +131,11 @@ module.exports = function (app) {
         .select("*")
         .where({ id: connectedStationId })
         .first();
+  
+      if (!connectedStation) {
+        return res.status(404).send("Connected station not found");
+      }
+  
       const connectedStationPosition = connectedStation.stationposition;
   
       if (
@@ -240,9 +147,7 @@ module.exports = function (app) {
         );
         return res
           .status(400)
-          .send(
-            'Invalid position. Only "start" or "end" positions are allowed.'
-          );
+          .send('Invalid position. Only "start" or "end" positions are allowed.');
       }
   
       const routeExists = await db
@@ -290,6 +195,7 @@ module.exports = function (app) {
       return res.status(500).send("Could not create new route");
     }
   });
+  
 
   app.put("/api/v1/requests/senior/:requestId", async function (req, res) {
     try {
@@ -600,7 +506,7 @@ module.exports = function (app) {
     } catch (error) {
       console.log(error.message);
       res.status(500).json({ error: 'Error retrieving user information' });
-    }
+    }4444444444444444444444444444444444444444444444
   });
 
   //get table for front end
@@ -703,6 +609,7 @@ module.exports = function (app) {
       res.status(500).json({ error: 'An error occurred while retrieving refund requests.' });
     }
   });
+  
   app.delete('/api/v1/route/:routeId', async (req, res) => {
     try {
       const user = await getUser(req);
@@ -753,6 +660,207 @@ module.exports = function (app) {
     return res.status(500).json({ error: 'Cannot delete the route' });
   }
   });
+  app.delete('/api/v1/station/:stationId', async (req, res) => {
+    try {
+      const user = await getUser(req);
+      if (user.isAdmin) {
+        const stationId = req.params.stationId;
+  
+        // Find the station to delete
+        const stationToDelete = await db('se_project.stations')
+          .where('id', '=', stationId)
+          .first();
+  
+        if (!stationToDelete) {
+          return res.status(404).json({ message: 'Station not found' });
+        }
+  
+        const { stationposition, stationtype } = stationToDelete;
+        
+        if (stationtype === 'normal' && stationposition === 'start') {
+          // Delete the station
+          await db('se_project.stations')
+            .where('id', '=', stationId)
+            .del();
+  
+          // Find the next station
+          const nextStation = await db('se_project.routes')
+            .where('tostationid', '=', stationId)
+            .first();
+  
+          if (nextStation) {
+            // Update the stationposition of the next station to "start"
+            await db('se_project.stations')
+              .where('id', nextStation.fromstationid)
+              .update({ stationposition: 'start' });
+          }
+        }
+  
+        if (stationtype === 'normal' && stationposition === 'middle') {
+          // Find the next station
+          const nextStation = await db('se_project.routes')
+            .where('tostationid', '=', stationId)
+            .first();
+  
+          // Delete the station
+          await db('se_project.stations')
+            .where('id', '=', nextStation.tostationid)
+            .del();
+  
+          // Create a new route and stationroute record
+          const newRoute1 = {
+            routename: 'newRoute1',
+            fromstationid: nextStation.fromstationid,
+            tostationid: nextStation.tostationid,
+          };
+  
+          const insertedRoute1 = await db('se_project.routes')
+            .insert(newRoute1)
+            .returning('*');
+  
+          const newSR1 = {
+            stationid: nextStation.tostationid,
+            routeid: insertedRoute1[0].id,
+          };
+  
+          await db('se_project.stationroutes').insert(newSR1);
+  
+          const newRoute2 = {
+            routename: 'newRoute2',
+            fromstationid: stationToDelete.fromstationid,
+            tostationid: nextStation.tostationid,
+          };
+  
+          const insertedRoute2 = await db('se_project.routes')
+            .insert(newRoute2)
+            .returning('*');
+  
+          const newSR2 = {
+            stationid: nextStation.tostationid,
+            routeid: insertedRoute2[0].id,
+          };
+  
+          await db('se_project.stationroutes').insert(newSR2);
+        }
+  
+        if (stationtype === 'transfer' && stationposition === 'middle') {
+          // Delete the station
+          await db('se_project.stations')
+            .where('id', '=', stationId)
+            .del();
+  
+          // Find the previous and next stations
+          const prevStation = await db('se_project.routes')
+            .where('tostationid', '=', stationId)
+            .first();
+  
+          const nextStation = await db('se_project.routes')
+            .where('fromstationid', '=', stationId)
+            .first();
+  
+          if (prevStation && nextStation) {
+            // Update the route from prevStation to nextStation
+            await db('se_project.routes')
+              .where('fromstationid', '=', prevStation.fromstationid)
+              .andWhere('tostationid', '=', stationId)
+              .update({ tostationid: nextStation.tostationid });
+  
+            // Delete the route from prevStation to current station (transfer station)
+            await db('se_project.routes')
+              .where('fromstationid', '=', prevStation.fromstationid)
+              .andWhere('tostationid', '=', stationId)
+              .del();
+  
+            // Update the stationposition of the next station to "middle"
+            await db('se_project.stations')
+              .where('id', '=', nextStation.tostationid)
+              .update({ stationposition: 'middle' });
+  
+            // Create a new route and stationroute record
+            const newRoute = {
+              routename: 'newRoute',
+              fromstationid: prevStation.fromstationid,
+              tostationid:
+                nextStation.fromstationid === stationId
+                  ? nextStation.tostationid
+                  : nextStation.fromstationid,
+            };
+  
+            const insertedRoute = await db('se_project.routes')
+              .insert(newRoute)
+              .returning('*');
+  
+            const newSR = {
+              stationid: insertedRoute[0].tostationid,
+              routeid: insertedRoute[0].id,
+            };
+  
+            await db('se_project.stationroutes').insert(newSR);
+          }
+        }
+  
+        if (stationtype === 'normal' && stationposition === 'end') {
+          // Delete the station
+          await db('se_project.stations')
+            .where('id', '=', stationId)
+            .del();
+  
+          // Find the previous station
+          const prevStation = await db('se_project.routes')
+            .where('fromstationid', '=', stationId)
+            .first();
+  
+          if (prevStation) {
+            // Update the stationposition of the previous station to "end"
+            await db('se_project.stations')
+              .where('id', prevStation.tostationid)
+              .update({ stationposition: 'end' });
+          }
+        }
+      }
+  
+      return res.status(200).json({ message: 'Station deleted successfully' });
+    } catch (e) {
+      console.error('Error deleting station:', e);
+      return res.status(400).json({ message: 'Could not delete station' });
+    }
+  });
+  
+  // CREATE STATION (ADMIN) => RUNS PERFECTLY
+  app.post("/api/v1/station", async function (req, res) {
+    try {
+      const user = await getUser(req);
+      if (!user || !user.isAdmin) {
+        return res.status(403).send("Unauthorized");
+      }
+  
+      // Check if station already exists in the system
+      const stationExists = await db
+        .select("*")
+        .from("se_project.stations")
+        .where("stationname", req.body.stationname);
+  
+      if (stationExists.length > 0) {
+        return res.status(400).send("This station already exists");
+      }
+  
+      const newStation = {
+        stationname: req.body.stationname,
+        stationtype: "normal",
+        stationposition: "start",
+        stationstatus: "new created",
+      };
+      const insertedStation = await db("se_project.stations").insert(newStation).returning("*");
+      return res.status(200).json(insertedStation);
+    } catch (error) {
+      console.log(error.message);
+      return res.status(500).send("Could not create new station");
+    }
+  });
+
+  
+
+
 
   //get rides of user
   app.get("/api/v1/ridesUser", async function (req, res) {
@@ -771,6 +879,7 @@ module.exports = function (app) {
       res.status(500).json({ error: "Error retrieving user rides" });
     }
   });
+  
   //UPDATE ZONE PRICES -ADMIN
 app.put("/api/v1/zones/:zoneId", async function (req, res) {
   try {
@@ -794,5 +903,9 @@ app.put("/api/v1/zones/:zoneId", async function (req, res) {
     return res.status(400).send("Error updating zone price.");
   }
 });
+
+
+
+
 };
 

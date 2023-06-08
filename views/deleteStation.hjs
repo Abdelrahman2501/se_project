@@ -44,44 +44,58 @@
     $(document).ready(function () {
       // Assume this variable is set based on the user's admin status
       var isAdmin = true; // or false
-      
-      $.ajax({
-        url: "/api/v1/stations",
-        type: "GET",
-        success: function (stations) {
-          var stationsContainer = $("#stations-container");
-          stations.forEach(function (station) {
-            var stationElement = $("<div>").addClass("station");
-            stationElement.append($("<h3>").text(station.stationname));
-            stationElement.append($("<p>").text("Type: " + station.stationtype));
-            stationElement.append($("<p>").text("Position: " + station.stationposition));
-            stationElement.append($("<p>").text("Status: " + station.stationstatus));
 
-            // var btnContainer = $("<div>").addClass("btn-container");
-            // var updateButton = $("<a>")
-            //   .text("Update")
-            //   .addClass("btn btn-primary")
-            //   .attr("href", "/update-station?stationId=" + station.stationid);
-            // var deleteButton = $("<a>")
-            //   .text("Delete")
-            //   .addClass("btn btn-danger")
-            //   .attr("href", "/delete-station?stationId=" + station.stationid);
+      function deleteStation() {
+        var stationId = $(this).data("stationid");
 
-            // Check if the user is an admin before appending the buttons
-            // if (isAdmin) {
-            //   btnContainer.append(updateButton);
-            //   btnContainer.append(deleteButton);
-            // }
+        $.ajax({
+          url: "/api/v1/station/" + stationId,
+          type: "DELETE",
+          success: function (response) {
+            // Refresh the station list after successful deletion
+            getStations();
+          },
+          error: function () {
+            alert("Error deleting station");
+          },
+        });
+      }
 
-            // stationElement.append(btnContainer);
+      function getStations() {
+        $.ajax({
+          url: "/api/v1/stations",
+          type: "GET",
+          success: function (stations) {
+            var stationsContainer = $("#stations-container");
+            stationsContainer.empty(); // Clear the existing station list
 
-            stationsContainer.append(stationElement);
-          });
-        },
-        error: function () {
-          alert("Error retrieving stations");
-        },
-      });
+            stations.forEach(function (station) {
+              var stationElement = $("<div>").addClass("station");
+              stationElement.append($("<h3>").text(station.stationname));
+              stationElement.append($("<p>").text("Type: " + station.stationtype));
+              stationElement.append($("<p>").text("Position: " + station.stationposition));
+              stationElement.append($("<p>").text("Status: " + station.stationstatus));
+
+              var btnContainer = $("<div>").addClass("btn-container");
+              var deleteButton = $("<a>")
+                .text("Delete")
+                .addClass("btn btn-danger")
+                .attr("data-stationid", station.stationid)
+                .click(deleteStation);
+
+              btnContainer.append(deleteButton);
+              stationElement.append(btnContainer);
+
+              stationsContainer.append(stationElement);
+            });
+          },
+          error: function () {
+            alert("Error retrieving stations");
+          },
+        });
+      }
+
+      getStations();
     });
   </script>
 </head>

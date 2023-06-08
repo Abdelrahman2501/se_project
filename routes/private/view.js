@@ -117,6 +117,11 @@ module.exports = function (app) {
     const users = await db.select('*').from('se_project.zones');
     return res.render('updateZonePrice');
   });
+  app.get('/deleteStations', async function (req, res) {
+    const users = await db.select('*').from('se_project.stations');
+    return res.render('deleteStation');
+  });
+  
 
 
 
