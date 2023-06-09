@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Stations</title>
+    <title>Delete Station</title>
     <link rel="stylesheet" href="/styles/bootstrap.min.css" />
     <link rel="stylesheet" href="/styles/style.css" />
     <link
@@ -10,103 +10,17 @@
     />
     <link rel="stylesheet" href="/styles/custom-style.css" />
     <style>
-      body {
-        background-color: #f1f1f1;
+      /* CSS styles for the delete station page */
+      .delete-station-form {
+        margin-top: 20px;
       }
-
-      .station {
-        background-color: #fff;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      .delete-station-input {
+        margin-bottom: 10px;
       }
-
-      .station h3 {
-        margin-top: 0;
-        color: #333;
-      }
-
-      .station p {
-        margin-bottom: 5px;
-        color: #666;
-      }
-
-      .btn-container {
-        text-align: center;
+      .delete-station-button {
         margin-top: 10px;
       }
-
-      .btn-container a {
-        margin-right: 10px;
-      }
     </style>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/js/bootstrap.min.js" type="text/javascript"></script>
-    <script>
-      $(document).ready(function () {
-        // Assume this variable is set based on the user's admin status
-        var isAdmin = true; // or false
-
-        function deleteStation() {
-          var stationId = $(this).data("stationid");
-
-          $.ajax({
-            url: "/api/v1/station/" + stationId,
-            type: "DELETE",
-            success: function (response) {
-              // Refresh the station list after successful deletion
-              getStations();
-            },
-            error: function () {
-              alert("Error deleting station");
-            },
-          });
-        }
-
-        function getStations() {
-          $.ajax({
-            url: "/api/v1/stations",
-            type: "GET",
-            success: function (stations) {
-              var stationsContainer = $("#stations-container");
-              stationsContainer.empty(); // Clear the existing station list
-
-              stations.forEach(function (station) {
-                var stationElement = $("<div>").addClass("station");
-                stationElement.append($("<h3>").text(station.stationname));
-                stationElement.append(
-                  $("<p>").text("Type: " + station.stationtype)
-                );
-                stationElement.append(
-                  $("<p>").text("Position: " + station.stationposition)
-                );
-                stationElement.append(
-                  $("<p>").text("Status: " + station.stationstatus)
-                );
-
-                var btnContainer = $("<div>").addClass("btn-container");
-                var deleteButton = $("<a>")
-                  .text("Delete")
-                  .addClass("btn btn-danger")
-                  .attr("data-stationid", station.stationid)
-                  .click(deleteStation);
-
-                btnContainer.append(deleteButton);
-                stationElement.append(btnContainer);
-
-                stationsContainer.append(stationElement);
-              });
-            },
-            error: function () {
-              alert("Error retrieving stations");
-            },
-          });
-        }
-
-        getStations();
-      });
-    </script>
   </head>
   <body>
     <div class="container" style="margin-top: 20px"></div>
@@ -186,8 +100,107 @@
           </ul>
         </div>
       </nav>
-      <h1>Stations</h1>
-      <div id="stations-container"></div>
+
+      <h1 class="page-title">Delete Station</h1>
+      <form class="delete-station-form">
+        <div class="form-group">
+          <label for="station-id">Station ID:</label>
+          <input
+            type="text"
+            class="form-control delete-station-input"
+            id="station-id"
+            placeholder="Enter the station ID"
+          />
+        </div>
+        <button type="button" class="btn btn-danger delete-station-button" onclick="onDeleteStation()">
+          Delete Station
+        </button>
+      </form>
+
+      <h2 class="page-title">Stations</h2>
+      <table class="table table-striped" id="stations-table">
+        <thead>
+          <tr>
+            <th>Station ID</th>
+            <th>Station Name</th>
+            <th>Station Type</th>
+            <th>Station Position</th>
+            <th>Station Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/scripts/bootstrap.min.js"></script>
+    <script>
+      function deleteStation(stationId) {
+        $.ajax({
+          url: "/api/v1/station/" + stationId,
+          type: "DELETE",
+          success: function (response) {
+            console.log(response.message);
+            alert("Station deleted successfully.");
+            loadStationsTable();
+          },
+          error: function (xhr, status, error) {
+            console.log("Error deleting station:", error);
+            alert("Error deleting station. Please try again.");
+          },
+        });
+      }
+
+      function onDeleteStation() {
+        var stationId = $("#station-id").val();
+        if (stationId === "") {
+          alert("Please enter a station ID.");
+          return;
+        }
+        deleteStation(stationId);
+      }
+
+      function loadStationsTable() {
+        $.ajax({
+          url: "/api/v1/stations",
+          type: "GET",
+          success: function (stations) {
+            var tableBody = $("#stations-table tbody");
+            tableBody.empty();
+
+            stations.forEach(function (station) {
+              var row =
+                "<tr>" +
+                "<td>" +
+                station.id +
+                "</td>" +
+                "<td>" +
+                station.stationname +
+                "</td>" +
+                "<td>" +
+                station.stationtype +
+                "</td>" +
+                "<td>" +
+                station.stationposition +
+                "</td>" +
+                "<td>" +
+                station.stationstatus +
+                "</td>" +
+                "</tr>";
+
+              tableBody.append(row);
+            });
+          },
+          error: function (xhr, status, error) {
+            console.log("Error retrieving stations:", error);
+            alert("Error retrieving stations. Please try again.");
+          },
+        });
+      }
+
+      $(document).ready(function () {
+        loadStationsTable();
+      });
+    </script>
   </body>
 </html>
