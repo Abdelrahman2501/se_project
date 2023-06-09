@@ -138,13 +138,22 @@
           </div>
           <ul class="nav navbar-nav">
             <li class="active">
-              <a href="/dashboard"><i class="fas fa-home"></i> Home</a>
+              <a href="/dashboard">
+                <i class="fas fa-home"></i>
+                Home
+              </a>
             </li>
             <li>
-              <a href="/stations"><i class="fas fa-subway"></i> Station</a>
+              <a href="/stations">
+                <i class="fas fa-subway"></i>
+                Stations
+              </a>
             </li>
             <li>
-              <a href="/routes"> <i class="fas fa-route"></i> Routes </a>
+              <a href="/routes">
+                <i class="fas fa-route"></i>
+                Routes
+              </a>
             </li>
             <li class="dropdown">
               <a
@@ -184,15 +193,15 @@
                     Buy Tickets by Subscription
                   </a>
                 </li>
-                <!-- Add other shop-related options here -->
-
-                <!-- Add other shop-related options here -->
               </ul>
             </li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li>
-              <a href="/"><i class="fas fa-sign-out-alt"></i> Logout</a>
+              <a href="/">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
             </li>
           </ul>
         </div>

@@ -34,7 +34,13 @@
               <li>
                 <a href="/stations">
                   <i class="fas fa-subway"></i>
-                  Station
+                  Stations
+                </a>
+              </li>
+              <li>
+                <a href="/routes">
+                  <i class="fas fa-route"></i>
+                  Routes
                 </a>
               </li>
               <li class="dropdown">
@@ -52,111 +58,33 @@
                 </a>
                 <ul class="dropdown-menu">
                   <li>
+                    <a href="/checkPrice">
+                      <i class="fas fa-calculator"></i>
+                      Check Price
+                    </a>
+                  </li>
+                  <li>
                     <a href="/tickets">
                       <i class="fas fa-ticket-alt"></i>
                       Tickets
                     </a>
                   </li>
-                  <!-- Add other shop-related options here -->
+                  <li>
+                    <a href="/subscriptions">
+                      <i class="fas fa-calendar-alt"></i>
+                      Subscriptions
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/buyTicketsBySubscription">
+                      <i class="fas fa-money-check"></i>
+                      Buy Tickets by Subscription
+                    </a>
+                  </li>
                 </ul>
               </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-              <li class="dropdown">
-                <a
-                  href="#"
-                  class="dropdown-toggle"
-                  data-toggle="dropdown"
-                  role="button"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                >
-                  <i class="fas fa-user-cog"></i>
-                  User Options
-                  <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                  <li>
-                    <a href="/resetPassword">
-                      <i class="fas fa-lock"></i>
-                      Reset Password
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/requests/refund">
-                      <i class="fas fa-undo"></i>
-                      Refund Ticket
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/requests/senior">
-                      <i class="fas fa-user-plus"></i>
-                      Senior Request
-                      <i class="fas fa-star"></i>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/rides">
-                      <i class="fas fa-subway"></i>
-                      Rides
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/status">
-                      <i class="fas fa-info-circle"></i>
-                      Requests Status
-                    </a>
-                  </li>
-                  <!-- Add other user-related options here -->
-                </ul>
-              </li>
-              <li class="dropdown admin-options">
-                <a
-                  href="#"
-                  class="dropdown-toggle"
-                  data-toggle="dropdown"
-                  role="button"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                >
-                  <i class="fas fa-user-cog"></i>
-                  Admin Options
-                  <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                  <li>
-                    <a href="/admin/stations">
-                      <i class="fas fa-subway"></i>
-                      Manage Stations
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/admin/routes">
-                      <i class="fas fa-route"></i>
-                      Manage Routes
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/manage/requests/refund">
-                      <i class="fas fa-undo"></i>
-                      Manage Requests (Refunds)
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/manage/requests/seniors">
-                      <i class="fas fa-user-plus"></i>
-                      Manage Requests (Seniors)
-                      <i class="fas fa-star"></i>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/admin/zones">
-                      <i class="fas fa-map-marker-alt"></i>
-                      Manage Zones
-                    </a>
-                  </li>
-                </ul>
-              </li>
               <li>
                 <a href="/">
                   <i class="fas fa-sign-out-alt"></i>
@@ -171,7 +99,7 @@
       <div class="row">
         <div class="col-md-6 col-md-offset-3">
           <h2>Create Station</h2>
-          <form action="/api/v1/station" method="POST">
+          <form id="stationForm">
             <div class="form-group">
               <label for="stationName">Station Name:</label>
               <input
@@ -187,5 +115,39 @@
         </div>
       </div>
     </div>
+
+    <script>
+      $(document).ready(function () {
+        // Handle form submission
+        $("#stationForm").submit(function (event) {
+          event.preventDefault();
+          // Get form data
+          var stationName = $("#stationName").val();
+          // Create station object
+          var station = {
+            stationName: stationName,
+          };
+          // Send AJAX request
+          $.ajax({
+            url: "/api/v1/station",
+            method: "POST",
+            data: JSON.stringify(station),
+            contentType: "application/json",
+            success: function (response) {
+              // Handle success response
+              console.log("Station created:", response);
+              alert("Station created successfully");
+              // Clear form input
+              $("#stationName").val("");
+            },
+            error: function (error) {
+              // Handle error response
+              console.log("Error creating station:", error);
+              alert("Error creating station");
+            },
+          });
+        });
+      });
+    </script>
   </body>
 </html>

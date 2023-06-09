@@ -55,10 +55,16 @@
           </div>
           <ul class="nav navbar-nav">
             <li class="active">
-              <a href="/dashboard"><i class="fas fa-home"></i> Home</a>
+              <a href="/dashboard">
+                <i class="fas fa-home"></i>
+                Home
+              </a>
             </li>
             <li>
-              <a href="/stations"><i class="fas fa-subway"></i> Station</a>
+              <a href="/stations">
+                <i class="fas fa-subway"></i>
+                Stations
+              </a>
             </li>
             <li>
               <a href="/routes">
@@ -75,7 +81,8 @@
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                <i class="fas fa-shopping-cart"></i> Shop
+                <i class="fas fa-shopping-cart"></i>
+                Shop
                 <span class="caret"></span>
               </a>
               <ul class="dropdown-menu">

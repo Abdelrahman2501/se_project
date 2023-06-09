@@ -190,6 +190,14 @@ module.exports = function (app) {
         return res.status(404).json({ message: "Ticket not found" });
       }
 
+      const existingRefundRequest = await db('se_project.refund_requests')
+        .where('ticketid', ticketId)
+        .first();
+
+      if (existingRefundRequest) {
+        return res.status(400).json({ message: "Refund request already exists for this ticket" });
+      }
+
       const refundTicket = await db('se_project.tickets').where('id', ticketId).first();
       const currentDate = new Date();
       const tripDate = new Date(refundTicket.tripdate);
@@ -208,6 +216,7 @@ module.exports = function (app) {
       await db("se_project.refund_requests")
         .insert(refundRequest)
         .returning("*");
+
       res.status(201).json({ message: "Refund request created" });
     } catch (e) {
       console.log(e.message);

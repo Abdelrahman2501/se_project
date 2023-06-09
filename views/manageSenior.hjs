@@ -117,7 +117,7 @@
               <li>
                 <a href="/stations">
                   <i class="fas fa-subway"></i>
-                  Station
+                  Stations
                 </a>
               </li>
               <li>
@@ -164,15 +164,12 @@
                       Buy Tickets by Subscription
                     </a>
                   </li>
-                  <!-- Add other shop-related options here -->
-
-                  <!-- Add other shop-related options here -->
                 </ul>
               </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
               <li>
-                <a href="/logout">
+                <a href="/">
                   <i class="fas fa-sign-out-alt"></i>
                   Logout
                 </a>
